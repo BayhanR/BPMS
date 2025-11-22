@@ -1,0 +1,215 @@
+"use client";
+
+import * as React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import * as Dialog from "@radix-ui/react-dialog";
+import { X, Calendar, Users, Tag, Image as ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface NewTaskModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  columnId: string;
+  onSubmit: (task: {
+    title: string;
+    description?: string;
+    assignees: string[];
+    labels: string[];
+    dueDate?: string;
+    coverImage?: string;
+  }) => void;
+}
+
+export function NewTaskModal({
+  open,
+  onOpenChange,
+  columnId,
+  onSubmit,
+}: NewTaskModalProps) {
+  const [title, setTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
+  const [dueDate, setDueDate] = React.useState("");
+  const [coverImage, setCoverImage] = React.useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit({
+      title,
+      description,
+      assignees: [],
+      labels: [],
+      dueDate,
+      coverImage,
+    });
+    // Reset form
+    setTitle("");
+    setDescription("");
+    setDueDate("");
+    setCoverImage("");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <AnimatePresence>
+        {open && (
+          <>
+            <Dialog.Portal forceMount>
+              {/* Overlay */}
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                />
+              </Dialog.Overlay>
+
+              {/* Modal */}
+              <Dialog.Content asChild>
+                <motion.div
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                  initial={{ opacity: 0, scale: 0.8, rotateX: -10 }}
+                  animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, rotateX: 10 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 150,
+                    damping: 20,
+                  }}
+                >
+                  <motion.div
+                    className={cn(
+                      "relative w-full max-w-2xl rounded-3xl border",
+                      "bg-white/10 backdrop-blur-2xl",
+                      "border-white/20",
+                      "shadow-2xl",
+                      "overflow-hidden"
+                    )}
+                    style={{
+                      boxShadow: "0 30px 80px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+                    }}
+                  >
+                    {/* Purple Glow */}
+                    <motion.div
+                      className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-purple-500 to-indigo-600 blur-xl opacity-50"
+                      animate={{
+                        opacity: [0.3, 0.5, 0.3],
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+
+                    <div className="relative z-10 p-6">
+                      {/* Header */}
+                      <div className="flex items-center justify-between mb-6">
+                        <Dialog.Title className="text-2xl font-bold text-white">
+                          Yeni Task Oluştur
+                        </Dialog.Title>
+                        <Dialog.Close asChild>
+                          <motion.button
+                            className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 flex items-center justify-center transition-colors"
+                            whileHover={{ scale: 1.1, rotate: 90 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <X className="w-4 h-4 text-white" />
+                          </motion.button>
+                        </Dialog.Close>
+                      </div>
+
+                      {/* Form */}
+                      <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Title */}
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-2">
+                            Başlık
+                          </label>
+                          <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            required
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                            placeholder="Task başlığını girin..."
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-2">
+                            Açıklama (Opsiyonel)
+                          </label>
+                          <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={4}
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all resize-none"
+                            placeholder="Task açıklamasını girin..."
+                          />
+                        </div>
+
+                        {/* Due Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-2">
+                            Bitiş Tarihi (Opsiyonel)
+                          </label>
+                          <input
+                            type="date"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                          />
+                        </div>
+
+                        {/* Cover Image */}
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-2">
+                            Kapak Görseli URL (Opsiyonel)
+                          </label>
+                          <input
+                            type="url"
+                            value={coverImage}
+                            onChange={(e) => setCoverImage(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                            placeholder="https://example.com/image.jpg"
+                          />
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-end gap-3 pt-4">
+                          <Dialog.Close asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              className="text-white/70 hover:text-white hover:bg-white/10"
+                            >
+                              İptal
+                            </Button>
+                          </Dialog.Close>
+                          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                            <Button
+                              type="submit"
+                              className="px-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/25"
+                            >
+                              Oluştur
+                            </Button>
+                          </motion.div>
+                        </div>
+                      </form>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          </>
+        )}
+      </AnimatePresence>
+    </Dialog.Root>
+  );
+}
+
