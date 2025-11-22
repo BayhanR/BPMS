@@ -47,14 +47,20 @@ const mockActivities = [
     target: "feature/auth-system",
     timestamp: new Date(Date.now() - 14400000),
   },
-  ...Array.from({ length: 50 }).map((_, i) => ({
-    id: `activity-${i + 6}`,
-    type: ["task_created", "task_completed", "comment", "file_uploaded"][i % 4] as const,
-    user: ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson"][i % 4],
-    action: ["oluşturdu", "tamamladı", "yorum ekledi", "dosya yükledi"][i % 4],
-    target: `Task ${i + 6}`,
-    timestamp: new Date(Date.now() - (i + 6) * 3600000),
-  })),
+  ...Array.from({ length: 50 }).map((_, i) => {
+    const types = ["task_created", "task_completed", "comment", "file_uploaded"] as const;
+    const users = ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson"];
+    const actions = ["oluşturdu", "tamamladı", "yorum ekledi", "dosya yükledi"];
+    
+    return {
+      id: `activity-${i + 6}`,
+      type: types[i % 4],
+      user: users[i % 4],
+      action: actions[i % 4],
+      target: `Task ${i + 6}`,
+      timestamp: new Date(Date.now() - (i + 6) * 3600000),
+    };
+  }),
 ];
 
 export default function ActivityPage() {

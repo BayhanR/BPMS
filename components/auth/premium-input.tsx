@@ -26,12 +26,12 @@ export function PremiumInput({
       <motion.div
         className="relative"
         animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        transition={{ type: "spring", stiffness: 150, damping: 20 }}
       >
         {Icon && (
           <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50 z-10" />
         )}
-        <motion.input
+        <input
           {...props}
           onFocus={(e) => {
             setIsFocused(true);
@@ -55,8 +55,6 @@ export function PremiumInput({
               : "none",
             borderColor: isFocused ? "rgba(139, 92, 246, 0.5)" : "rgba(255, 255, 255, 0.1)",
           }}
-          animate={isFocused ? { scale: 1.02 } : { scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
         />
         {isFocused && (
           <motion.div

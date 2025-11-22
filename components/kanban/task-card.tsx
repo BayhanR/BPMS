@@ -92,12 +92,11 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
         }}
       >
         <Tilt
-          tiltMaxAngleX={5}
-          tiltMaxAngleY={5}
-          scale={1.02}
+          tiltMaxAngleX={isDragging ? 0 : 5}
+          tiltMaxAngleY={isDragging ? 0 : 5}
+          scale={isDragging ? 1 : 1.02}
           transitionSpeed={1000}
           className="h-full"
-          disabled={isDragging}
         >
           <div className="p-4 space-y-3">
             {/* Cover Image */}

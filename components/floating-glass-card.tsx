@@ -4,8 +4,9 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface FloatingGlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface FloatingGlassCardProps {
   children: React.ReactNode;
+  className?: string;
   hoverScale?: number;
   glowIntensity?: number;
 }
@@ -15,7 +16,6 @@ export function FloatingGlassCard({
   className,
   hoverScale = 1.05,
   glowIntensity = 0.5,
-  ...props
 }: FloatingGlassCardProps) {
   return (
     <motion.div
@@ -42,7 +42,6 @@ export function FloatingGlassCard({
         stiffness: 150,
         damping: 20,
       }}
-      {...props}
     >
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="relative z-10">{children}</div>

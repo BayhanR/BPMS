@@ -6,17 +6,17 @@
 npm run dev
 ```
 
-Sunucu `http://localhost:3000` adresinde çalışacak.
+Sunucu `http://localhost:3004` adresinde çalışacak.
 
 ## 📍 Test Edilebilecek Sayfalar
 
 ### Ana Sayfa
-- **URL:** `http://localhost:3000/`
+- **URL:** `http://localhost:3004/`
 - **Açıklama:** Landing page - Coming Soon ekranı
 - **Özellikler:** Logo, "Coming Soon" mesajı, navigation linkleri
 
 ### Authentication
-- **URL:** `http://localhost:3000/signin`
+- **URL:** `http://localhost:3004/signin`
 - **Açıklama:** Premium login sayfası
 - **Özellikler:** 
   - Mesh gradient arka plan
@@ -26,12 +26,12 @@ Sunucu `http://localhost:3000` adresinde çalışacak.
   - Focus'ta grow + glow input'lar
   - Başarılı girişte blur transition
 
-- **URL:** `http://localhost:3000/signup`
+- **URL:** `http://localhost:3004/signup`
 - **Açıklama:** Premium kayıt sayfası
 - **Özellikler:** Aynı premium özellikler + şifre tekrar alanı
 
 ### Dashboard
-- **URL:** `http://localhost:3000/dashboard`
+- **URL:** `http://localhost:3004/dashboard`
 - **Açıklama:** Ana dashboard
 - **Özellikler:**
   - Stats cards (glassmorphism)
@@ -40,7 +40,7 @@ Sunucu `http://localhost:3000` adresinde çalışacak.
   - Sidebar + Topbar
 
 ### Projects
-- **URL:** `http://localhost:3000/projects`
+- **URL:** `http://localhost:3004/projects`
 - **Açıklama:** 3D stacked cards - Tüm projeler
 - **Özellikler:**
   - Üst üste binen 3D kartlar
@@ -49,7 +49,7 @@ Sunucu `http://localhost:3000` adresinde çalışacak.
   - Spring physics animations
 
 ### New Project (Template Gallery)
-- **URL:** `http://localhost:3000/projects/new`
+- **URL:** `http://localhost:3004/projects/new`
 - **Açıklama:** Template seçimi - 20 şablon
 - **Özellikler:**
   - 3D stacked template cards
@@ -58,7 +58,7 @@ Sunucu `http://localhost:3000` adresinde çalışacak.
   - Redirect to project
 
 ### Kanban Board
-- **URL:** `http://localhost:3000/projects/1/board`
+- **URL:** `http://localhost:3004/projects/1/board`
 - **Açıklama:** Kanban board - Drag & drop
 - **Özellikler:**
   - dnd-kit ile drag & drop
@@ -68,7 +68,7 @@ Sunucu `http://localhost:3000` adresinde çalışacak.
   - Socket.io hazır
 
 ### Activity Feed
-- **URL:** `http://localhost:3000/projects/1/activity`
+- **URL:** `http://localhost:3004/projects/1/activity`
 - **Açıklama:** Activity feed - Infinite scroll
 - **Özellikler:**
   - Glass cards
@@ -196,15 +196,15 @@ Sunucu `http://localhost:3000` adresinde çalışacak.
 ## 🎯 Hızlı Test URL'leri
 
 ```
-http://localhost:3000/                    → Landing
-http://localhost:3000/signin              → Login
-http://localhost:3000/signup              → Register
-http://localhost:3000/dashboard           → Dashboard
-http://localhost:3000/projects            → Projects (3D Cards)
-http://localhost:3000/projects/new        → Template Gallery
-http://localhost:3000/projects/1/board    → Kanban Board
-http://localhost:3000/projects/1/activity → Activity Feed
-http://localhost:3000/projects/1          → Project Detail
+http://localhost:3004/                    → Landing
+http://localhost:3004/signin              → Login
+http://localhost:3004/signup              → Register
+http://localhost:3004/dashboard           → Dashboard
+http://localhost:3004/projects            → Projects (3D Cards)
+http://localhost:3004/projects/new        → Template Gallery
+http://localhost:3004/projects/1/board    → Kanban Board
+http://localhost:3004/projects/1/activity → Activity Feed
+http://localhost:3004/projects/1          → Project Detail
 ```
 
 Happy Testing! 🚀
