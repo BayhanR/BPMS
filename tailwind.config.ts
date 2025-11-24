@@ -10,27 +10,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        background: {
+          DEFAULT: "#0a0a0a",
+          50: "#111111",
+          100: "#1a1a1a",
+        },
+        foreground: "#f5f5f5",
         primary: {
-          DEFAULT: "#8b5cf6",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#ff1e56",
+          foreground: "#0a0a0a",
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#161616",
+          foreground: "#f5f5f5",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "#ff006e",
+          foreground: "#0a0a0a",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "#1f1f1f",
+          foreground: "#b0b0b0",
         },
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
+        border: "#1f1f1f",
+        input: "#1f1f1f",
+        ring: "#ff1e56",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -52,8 +56,8 @@ const config: Config = {
           "100%": { opacity: "1", transform: "scale(1)" },
         },
         glowPulse: {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(139, 92, 246, 0.3)" },
-          "50%": { boxShadow: "0 0 40px rgba(139, 92, 246, 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(255, 30, 86, 0.3)" },
+          "50%": { boxShadow: "0 0 40px rgba(255, 30, 86, 0.6)" },
         },
       },
       backdropBlur: {

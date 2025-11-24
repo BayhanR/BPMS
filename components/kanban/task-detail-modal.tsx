@@ -123,7 +123,7 @@ export function TaskDetailModal({
                     >
                       {/* Purple Glow */}
                       <motion.div
-                        className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-purple-500 to-indigo-600 blur-xl opacity-50"
+                        className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary to-accent blur-xl opacity-50"
                         animate={{
                           opacity: [0.3, 0.5, 0.3],
                           scale: [1, 1.02, 1],
@@ -243,7 +243,7 @@ export function TaskDetailModal({
                                   }}
                                 >
                                   <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-xs font-semibold text-white">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-semibold text-white">
                                       {comment.author.charAt(0)}
                                     </div>
                                     <div>
@@ -255,7 +255,7 @@ export function TaskDetailModal({
                                 </motion.div>
                               ))}
                               <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10">
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
                                   Y
                                 </div>
                                 <input

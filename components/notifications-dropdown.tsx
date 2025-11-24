@@ -30,10 +30,10 @@ export function NotificationsDropdown({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const typeColors = {
-    info: "#6366f1",
-    success: "#10b981",
-    warning: "#f59e0b",
-    error: "#ef4444",
+    info: "#ff4d6d",
+    success: "#34d399",
+    warning: "#f97316",
+    error: "#ff1e56",
   };
 
   return (
@@ -98,7 +98,7 @@ export function NotificationsDropdown({
                   damping: 20,
                 }}
                 style={{
-                  boxShadow: "0 20px 60px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+                  boxShadow: "0 20px 60px rgba(255, 30, 86, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.08) inset",
                 }}
               >
                 {/* Header */}
@@ -107,7 +107,7 @@ export function NotificationsDropdown({
                   {unreadCount > 0 && (
                     <motion.button
                       onClick={onMarkAllAsRead}
-                      className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+                      className="text-xs text-primary hover:text-accent transition-colors"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
@@ -128,7 +128,7 @@ export function NotificationsDropdown({
                         key={notification.id}
                         className={cn(
                           "p-4 border-b border-white/10 cursor-pointer transition-colors",
-                          !notification.read && "bg-purple-500/10 hover:bg-purple-500/20",
+                          !notification.read && "bg-primary/10 hover:bg-primary/20",
                           notification.read && "hover:bg-white/5"
                         )}
                         initial={{ opacity: 0, x: -20 }}
@@ -166,7 +166,7 @@ export function NotificationsDropdown({
                           </div>
                           {!notification.read && (
                             <motion.div
-                              className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0 mt-2"
+                              className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2"
                               animate={{ scale: [1, 1.2, 1] }}
                               transition={{ duration: 2, repeat: Infinity }}
                             />

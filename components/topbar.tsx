@@ -58,7 +58,7 @@ export function Topbar({ className }: TopbarProps) {
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: "spring", stiffness: 100, damping: 15 }}
       style={{
-        boxShadow: "0 4px 24px rgba(139, 92, 246, 0.1)",
+        boxShadow: "0 4px 24px rgba(255, 30, 86, 0.15)",
       }}
     >
       {/* Search */}
@@ -71,7 +71,7 @@ export function Topbar({ className }: TopbarProps) {
         <input
           type="text"
           placeholder="Search projects, tasks..."
-          className="w-full pl-10 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+          className="w-full pl-10 pr-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
         />
       </motion.div>
 
@@ -91,7 +91,7 @@ export function Topbar({ className }: TopbarProps) {
           whileTap={{ scale: 0.95 }}
         >
           <motion.div
-            className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 opacity-0 group-hover:opacity-100 transition-opacity"
             animate={{
               rotate: [0, 360],
             }}
@@ -127,7 +127,7 @@ export function Topbar({ className }: TopbarProps) {
         <motion.button
           className={cn(
             "w-10 h-10 rounded-full",
-            "bg-gradient-to-br from-purple-500 to-indigo-600",
+            "bg-gradient-to-br from-primary to-accent",
             "flex items-center justify-center",
             "border-2 border-white/20",
             "hover:border-white/40 transition-colors"

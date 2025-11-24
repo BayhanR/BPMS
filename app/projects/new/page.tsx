@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
-import { StackedTemplateCard } from "@/components/3d-stacked-template-card";
+import Tilt from "react-parallax-tilt";
 import {
   ArrowLeft,
   Workflow,
@@ -30,6 +30,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSidebarContext } from "@/components/sidebar-context";
 
 const templates = [
   {
@@ -174,16 +175,19 @@ const templates = [
   },
 ];
 
+type TemplateData = (typeof templates)[number];
+
 export default function NewProjectPage() {
   const router = useRouter();
-  const [mouseX, setMouseX] = React.useState(0);
-  const [mouseY, setMouseY] = React.useState(0);
   const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>(null);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    setMouseX(e.clientX);
-    setMouseY(e.clientY);
-  };
+  const { sidebarWidth } = useSidebarContext();
+  const contentStyle = React.useMemo(
+    () => ({
+      paddingLeft: sidebarWidth,
+      transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+    }),
+    [sidebarWidth]
+  );
 
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplate(templateId);
@@ -197,9 +201,9 @@ export default function NewProjectPage() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" onMouseMove={handleMouseMove}>
+    <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-80 ml-0">
+      <div className="flex-1 flex flex-col" style={contentStyle}>
         <Topbar />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
           <motion.div
@@ -229,17 +233,28 @@ export default function NewProjectPage() {
               </div>
             </div>
 
-            {/* Template Gallery - 3D Stacked Cards */}
-            <div className="relative h-[500px] md:h-[700px] flex items-center justify-center perspective-1000 mb-8 overflow-hidden">
-              <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
-                {templates.map((template, index) => (
-                  <StackedTemplateCard
+            {/* Template Menu */}
+            <div className="space-y-6">
+              <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr] items-stretch">
+                <TemplateHeroCard template={templates[0]} onSelect={handleTemplateSelect} />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {templates.slice(1,5).map((template, index) => (
+                    <TemplateMiniCard
+                      key={template.id}
+                      template={template}
+                      index={index}
+                      onSelect={handleTemplateSelect}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {templates.slice(5,14).map((template, index) => (
+                  <TemplateMenuCard
                     key={template.id}
                     template={template}
                     index={index}
-                    total={templates.length}
-                    mouseX={mouseX}
-                    mouseY={mouseY}
                     onSelect={handleTemplateSelect}
                   />
                 ))}
@@ -261,7 +276,7 @@ export default function NewProjectPage() {
                   exit={{ scale: 0.9, opacity: 0 }}
                 >
                   <motion.div
-                    className="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 mx-auto mb-4 flex items-center justify-center"
+                    className="w-16 h-16 rounded-full bg-gradient-to-r from-primary to-accent mx-auto mb-4 flex items-center justify-center"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                   >
@@ -317,5 +332,165 @@ export default function NewProjectPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+function TemplateHeroCard({
+  template,
+  onSelect,
+}: {
+  template: TemplateData;
+  onSelect: (id: string) => void;
+}) {
+  const Icon = template.icon;
+
+  return (
+    <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} scale={1.02} transitionSpeed={1500}>
+      <motion.button
+        onClick={() => onSelect(template.id)}
+        className="relative w-full h-full text-left rounded-[32px] border border-white/10 bg-gradient-to-br from-[#24060d] via-[#120508] to-[#080808] backdrop-blur-2xl p-8 overflow-hidden shadow-[0_40px_140px_rgba(255,30,86,0.35)]"
+        whileHover={{ y: -6 }}
+        transition={{ type: "spring", stiffness: 160, damping: 20 }}
+      >
+        <motion.div
+          className="absolute inset-0 opacity-40"
+          animate={{ backgroundPosition: ["0% 0%", "100% 100%"] }}
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 20%, ${template.color}55, transparent 50%), radial-gradient(circle at 80% 0%, rgba(255,255,255,0.15), transparent 40%)`,
+          }}
+        />
+        <div className="relative z-10 flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-6">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center border border-white/10"
+              style={{ background: `linear-gradient(135deg, ${template.color}, ${template.color}99)` }}
+            >
+              <Icon className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-white/60 uppercase tracking-wide">Featured Template</p>
+              <h2 className="text-3xl font-bold text-white">{template.name}</h2>
+            </div>
+          </div>
+          <p className="text-white/70 text-base mb-8 leading-relaxed max-w-2xl">{template.description}</p>
+
+          <div className="mt-auto grid grid-cols-2 gap-4 text-sm text-white/70">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-white/50 text-xs mb-1">Zaman çizelgesi</p>
+              <p className="text-lg font-semibold text-white">Sprint 18</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <p className="text-white/50 text-xs mb-1">Takım</p>
+              <p className="text-lg font-semibold text-white">Core Product</p>
+            </div>
+          </div>
+
+          <motion.div
+            className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold bg-gradient-to-r from-rose-500 to-indigo-500 shadow-lg shadow-rose-500/25"
+            whileHover={{ scale: 1.05, x: 4 }}
+          >
+            Use Template
+            <ArrowLeft className="w-4 h-4 rotate-180" />
+          </motion.div>
+        </div>
+      </motion.button>
+    </Tilt>
+  );
+}
+
+function TemplateMiniCard({
+  template,
+  index,
+  onSelect,
+}: {
+  template: TemplateData;
+  index: number;
+  onSelect: (id: string) => void;
+}) {
+  const Icon = template.icon;
+  return (
+    <Tilt tiltMaxAngleX={10} tiltMaxAngleY={10} scale={1.03} transitionSpeed={1200}>
+      <motion.button
+        onClick={() => onSelect(template.id)}
+        className="relative w-full text-left rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 overflow-hidden"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+        whileHover={{ y: -6 }}
+      >
+        <motion.div
+          className="absolute inset-0 opacity-0"
+          animate={{ opacity: 0.2 }}
+          whileHover={{ opacity: 0.4 }}
+          style={{
+            background: `linear-gradient(135deg, ${template.color}, transparent)`,
+          }}
+        />
+        <div className="relative z-10 space-y-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: `linear-gradient(135deg, ${template.color}, ${template.color}88)` }}
+            >
+              <Icon className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-white/60">Popular</p>
+              <h3 className="text-lg font-semibold text-white">{template.name}</h3>
+            </div>
+          </div>
+          <p className="text-xs text-white/60 line-clamp-3">{template.description}</p>
+        </div>
+      </motion.button>
+    </Tilt>
+  );
+}
+
+function TemplateMenuCard({
+  template,
+  index,
+  onSelect,
+}: {
+  template: TemplateData;
+  index: number;
+  onSelect: (id: string) => void;
+}) {
+  const Icon = template.icon;
+  return (
+    <Tilt tiltMaxAngleX={8} tiltMaxAngleY={8} scale={1.02} transitionSpeed={1000}>
+      <motion.button
+        onClick={() => onSelect(template.id)}
+        className="relative w-full text-left rounded-2xl border border-white/10 bg-[#0f1117]/70 backdrop-blur-2xl p-5 overflow-hidden"
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.04 }}
+        whileHover={{ y: -4 }}
+      >
+        <div className="flex items-center gap-3 mb-3 relative z-10">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center"
+            style={{ background: `linear-gradient(135deg, ${template.color}, ${template.color}88)` }}
+          >
+            <Icon className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-white">{template.name}</h3>
+            <p className="text-xs text-white/50">3D Action Ready</p>
+          </div>
+        </div>
+        <p className="text-xs text-white/60 mb-4 relative z-10 line-clamp-2">{template.description}</p>
+        <div className="flex items-center justify-between text-xs text-white/50 relative z-10">
+          <span>20+ task preset</span>
+          <span className="text-white">Use →</span>
+        </div>
+        <motion.div
+          className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+          initial={{ scaleX: 0 }}
+          whileHover={{ scaleX: 1 }}
+          transition={{ duration: 0.5 }}
+        />
+      </motion.button>
+    </Tilt>
   );
 }

@@ -79,7 +79,7 @@ export default function SignUpPage() {
                 >
                   {/* Purple Glow */}
                   <motion.div
-                    className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-purple-500 to-indigo-600 blur-xl opacity-0 transition-opacity duration-300"
+                    className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary to-accent blur-xl opacity-0 transition-opacity duration-300"
                     whileHover={{ opacity: 0.3 }}
                   />
 
@@ -92,10 +92,10 @@ export default function SignUpPage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 }}
                     >
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                         <Sparkles className="w-6 h-6 text-white" />
                       </div>
-                      <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                      <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                         BPMS
                       </h1>
                     </motion.div>
@@ -172,7 +172,7 @@ export default function SignUpPage() {
                         <Button
                           type="submit"
                           disabled={isLoading}
-                          className="w-full h-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-medium hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/25 disabled:opacity-50"
+                          className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-medium hover:brightness-110 transition-all shadow-lg shadow-primary/30 disabled:opacity-50"
                         >
                           {isLoading ? (
                             <motion.div
@@ -263,7 +263,7 @@ export default function SignUpPage() {
                       Zaten hesabınız var mı?{" "}
                       <a
                         href="/signin"
-                        className="text-purple-400 hover:text-purple-300 transition-colors font-medium"
+                        className="text-primary hover:text-accent transition-colors font-medium"
                       >
                         Giriş Yap
                       </a>

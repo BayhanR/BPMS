@@ -11,7 +11,7 @@ interface PremiumButtonProps extends ButtonProps {
 
 export function PremiumButton({
   className,
-  glowColor = "#8b5cf6",
+  glowColor = "#ff1e56",
   children,
   ...props
 }: PremiumButtonProps) {

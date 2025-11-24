@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { FloatingGlassCard } from "@/components/floating-glass-card";
 import { TrendingUp, Users, FolderKanban, Clock } from "lucide-react";
+import { useSidebarContext } from "@/components/sidebar-context";
 
 const stats = [
   {
@@ -13,28 +14,28 @@ const stats = [
     value: "24",
     change: "+12%",
     icon: FolderKanban,
-    color: "from-purple-500 to-indigo-600",
+    color: "from-primary to-accent",
   },
   {
     title: "Aktif Görevler",
     value: "156",
     change: "+8%",
     icon: Clock,
-    color: "from-indigo-500 to-purple-600",
+    color: "from-accent to-[#ff4d6d]",
   },
   {
     title: "Takım Üyeleri",
     value: "42",
     change: "+5%",
     icon: Users,
-    color: "from-purple-500 to-pink-600",
+    color: "from-[#ff4d6d] to-[#ff1e56]",
   },
   {
     title: "Tamamlanma Oranı",
     value: "78%",
     change: "+15%",
     icon: TrendingUp,
-    color: "from-indigo-500 to-cyan-600",
+    color: "from-primary to-[#ff4d6d]",
   },
 ];
 
@@ -44,26 +45,34 @@ const recentProjects = [
     name: "Web Portal Redesign",
     status: "Devam Ediyor",
     progress: 65,
-    color: "#8b5cf6",
+    color: "#ff1e56",
   },
   {
     id: "2",
     name: "Mobile App Development",
     status: "Planlama",
     progress: 30,
-    color: "#6366f1",
+    color: "#ff4d6d",
   },
   {
     id: "3",
     name: "API Integration",
     status: "İnceleme",
     progress: 85,
-    color: "#ec4899",
+    color: "#ff006e",
   },
 ];
 
 export default function DashboardPage() {
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const { sidebarWidth } = useSidebarContext();
+  const contentStyle = React.useMemo(
+    () => ({
+      paddingLeft: sidebarWidth,
+      transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+    }),
+    [sidebarWidth]
+  );
 
   React.useEffect(() => {
     // Blur in animation after route transition
@@ -82,7 +91,7 @@ export default function DashboardPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
         >
           <Sidebar />
-          <div className="flex-1 flex flex-col md:ml-80 ml-0">
+          <div className="flex-1 flex flex-col" style={contentStyle}>
             <Topbar />
             <main className="flex-1 overflow-y-auto p-4 md:p-8">
               <motion.div

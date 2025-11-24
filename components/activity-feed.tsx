@@ -97,13 +97,13 @@ export function ActivityFeed({ activities, onLoadMore, hasMore = false }: Activi
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
                       {activity.user.charAt(0)}
                     </div>
                     <span className="text-sm font-semibold text-white">{activity.user}</span>
                     <span className="text-sm text-white/60">{activity.action}</span>
                     {activity.target && (
-                      <span className="text-sm font-medium text-purple-400">{activity.target}</span>
+                      <span className="text-sm font-medium text-primary">{activity.target}</span>
                     )}
                   </div>
                   <p className="text-xs text-white/50">
@@ -125,7 +125,7 @@ export function ActivityFeed({ activities, onLoadMore, hasMore = false }: Activi
       {hasMore && (
         <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
           <motion.div
-            className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full"
+            className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full"
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           />

@@ -25,7 +25,7 @@ export default function ProjectDetailPage() {
             { icon: CheckCircle2, label: "Completed", value: "24", color: "from-green-500 to-emerald-600" },
             { icon: Clock, label: "In Progress", value: "8", color: "from-yellow-500 to-orange-600" },
             { icon: Users, label: "Team Members", value: "12", color: "from-blue-500 to-cyan-600" },
-            { icon: Calendar, label: "Days Left", value: "15", color: "from-purple-500 to-indigo-600" },
+            { icon: Calendar, label: "Days Left", value: "15", color: "from-primary to-accent" },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}

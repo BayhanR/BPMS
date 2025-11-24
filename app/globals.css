@@ -4,20 +4,20 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --primary: 271 91% 65%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 271 91% 65%;
-    --radius: 0.5rem;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --primary: 348 100% 55%;
+    --primary-foreground: 0 0% 8%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 96%;
+    --accent: 334 100% 50%;
+    --accent-foreground: 0 0% 8%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 70%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 348 100% 55%;
+    --radius: 0.75rem;
   }
 
   * {
@@ -25,7 +25,7 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#1e1b4b] text-foreground;
+    @apply bg-gradient-to-br from-[#0a0a0a] via-[#111111] to-[#1a1a1a] text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
     overflow-x: hidden;
   }
@@ -52,12 +52,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.3);
+  background: rgba(255, 30, 86, 0.4);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.5);
+  background: rgba(255, 30, 86, 0.6);
 }
 
 /* Glassmorphism backdrop */

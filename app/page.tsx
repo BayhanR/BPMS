@@ -23,7 +23,7 @@ export default function LandingPage() {
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
         >
           <motion.div
-            className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700 flex items-center justify-center shadow-2xl"
+            className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl"
             animate={{
               boxShadow: [
                 "0 20px 60px rgba(139, 92, 246, 0.4)",
@@ -40,7 +40,7 @@ export default function LandingPage() {
             <Sparkles className="w-10 h-10 text-white" />
           </motion.div>
           <motion.h1
-            className="text-6xl font-bold bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent"
+            className="text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
@@ -118,7 +118,7 @@ export default function LandingPage() {
               }}
             >
               <Button
-                className="h-12 px-6 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/25"
+                className="h-12 px-6 rounded-xl bg-gradient-to-r from-primary to-accent text-white hover:brightness-110 transition-all shadow-lg shadow-primary/30"
               >
                 <LayoutDashboard className="w-5 h-5 mr-2" />
                 Dashboard
@@ -159,27 +159,27 @@ export default function LandingPage() {
         >
           <p className="text-sm text-white/50 mb-4">Hızlı Erişim:</p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
-            <Link href="/signin" className="text-purple-400 hover:text-purple-300 transition-colors hover:underline">
+            <Link href="/signin" className="text-primary hover:text-accent transition-colors hover:underline">
               /signin
             </Link>
             <span className="text-white/30">•</span>
-            <Link href="/signup" className="text-purple-400 hover:text-purple-300 transition-colors hover:underline">
+            <Link href="/signup" className="text-primary hover:text-accent transition-colors hover:underline">
               /signup
             </Link>
             <span className="text-white/30">•</span>
-            <Link href="/dashboard" className="text-purple-400 hover:text-purple-300 transition-colors hover:underline">
+            <Link href="/dashboard" className="text-primary hover:text-accent transition-colors hover:underline">
               /dashboard
             </Link>
             <span className="text-white/30">•</span>
-            <Link href="/projects" className="text-purple-400 hover:text-purple-300 transition-colors hover:underline">
+            <Link href="/projects" className="text-primary hover:text-accent transition-colors hover:underline">
               /projects
             </Link>
             <span className="text-white/30">•</span>
-            <Link href="/projects/new" className="text-purple-400 hover:text-purple-300 transition-colors hover:underline">
+            <Link href="/projects/new" className="text-primary hover:text-accent transition-colors hover:underline">
               /projects/new
             </Link>
             <span className="text-white/30">•</span>
-            <Link href="/projects/1/board" className="text-purple-400 hover:text-purple-300 transition-colors hover:underline">
+            <Link href="/projects/1/board" className="text-primary hover:text-accent transition-colors hover:underline">
               /projects/1/board
             </Link>
           </div>
@@ -187,7 +187,7 @@ export default function LandingPage() {
 
         {/* Decorative Elements */}
         <motion.div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-purple-500/10 to-indigo-500/10 blur-3xl -z-10"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-primary/10 to-accent/15 blur-3xl -z-10"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],

@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { useSidebarContext } from "@/components/sidebar-context";
 import { ActivityFeed } from "@/components/activity-feed";
 
 const mockActivities = [
@@ -66,6 +67,14 @@ const mockActivities = [
 export default function ActivityPage() {
   const [activities, setActivities] = React.useState(mockActivities);
   const [hasMore, setHasMore] = React.useState(true);
+  const { sidebarWidth } = useSidebarContext();
+  const contentStyle = React.useMemo(
+    () => ({
+      paddingLeft: sidebarWidth,
+      transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+    }),
+    [sidebarWidth]
+  );
 
   const handleLoadMore = () => {
     // Infinite scroll logic
@@ -82,7 +91,7 @@ export default function ActivityPage() {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-80 ml-0">
+      <div className="flex-1 flex flex-col" style={contentStyle}>
         <Topbar />
         <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <motion.div

@@ -129,7 +129,7 @@ export function PremiumStackedProjectCard({
         <motion.div
           className={cn(
             "relative h-[320px] w-[420px] rounded-3xl border border-white/20",
-            "bg-gradient-to-br from-purple-600/20 to-indigo-600/20",
+            "bg-gradient-to-br from-primary/30 via-[#1a0d11] to-accent/10",
             "backdrop-blur-xl",
             "shadow-2xl",
             "overflow-hidden",
@@ -137,14 +137,14 @@ export function PremiumStackedProjectCard({
             "group"
           )}
           style={{
-            boxShadow: `0 20px 60px rgba(139, 92, 246, ${0.2 + depth * 0.2}), 
-                        0 0 0 1px rgba(255, 255, 255, 0.1) inset,
-                        ${xSpring.get() * 15}px ${ySpring.get() * 15}px 40px rgba(99, 102, 241, ${0.15})`,
+            boxShadow: `0 20px 60px rgba(255, 30, 86, ${0.2 + depth * 0.2}), 
+                        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+                        ${xSpring.get() * 15}px ${ySpring.get() * 15}px 40px rgba(255, 0, 110, ${0.18})`,
           }}
           whileHover={{
-            boxShadow: `0 30px 80px rgba(139, 92, 246, ${0.6 + glowIntensity * 0.2}), 
+            boxShadow: `0 30px 80px rgba(255, 30, 86, ${0.6 + glowIntensity * 0.2}), 
                        0 0 0 1px rgba(255, 255, 255, 0.2) inset,
-                       0 0 120px rgba(139, 92, 246, ${0.4})`,
+                       0 0 120px rgba(255, 0, 110, ${0.4})`,
             transition: {
               type: "spring",
               stiffness: 200,
@@ -152,11 +152,11 @@ export function PremiumStackedProjectCard({
             },
           }}
         >
-          {/* Purple Glow Background */}
+          {/* Crimson Glow Background */}
           <motion.div
             className="absolute -inset-1 rounded-3xl blur-2xl opacity-0 group-hover:opacity-60 transition-opacity duration-500"
             style={{
-              background: `linear-gradient(135deg, ${project.color}, #6366f1)`,
+              background: `linear-gradient(135deg, ${project.color}, #ff1e56)`,
             }}
             animate={{
               opacity: [0, 0.3, 0],
@@ -172,7 +172,7 @@ export function PremiumStackedProjectCard({
           <motion.div
             className="absolute inset-0 rounded-3xl"
             style={{
-              background: `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(139, 92, 246, 0.3), transparent 70%)`,
+              background: `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(255, 30, 86, 0.35), transparent 70%)`,
               opacity: glowIntensity * (1 - depth),
             }}
           />
@@ -182,7 +182,7 @@ export function PremiumStackedProjectCard({
             {/* Icon & Title */}
             <div className="space-y-4">
               <motion.div
-                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/30 to-indigo-500/30 border border-white/20 flex items-center justify-center backdrop-blur-sm"
+                className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-accent/30 border border-white/20 flex items-center justify-center backdrop-blur-sm"
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
@@ -190,7 +190,7 @@ export function PremiumStackedProjectCard({
               </motion.div>
 
               <div>
-                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors">
+                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors">
                   {project.name}
                 </h3>
                 <p className="text-sm text-white/60">
@@ -202,14 +202,14 @@ export function PremiumStackedProjectCard({
             {/* View Project Button - Glowing Orb */}
             <Link href={`/projects/${project.id}/board`} passHref>
               <motion.button
-                className="relative w-full h-12 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold overflow-hidden group/btn"
+                className="relative w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-semibold overflow-hidden group/btn"
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
               >
                 {/* Glowing Background */}
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"
+                  className="absolute inset-0 bg-gradient-to-r from-primary to-accent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"
                   animate={{
                     opacity: [0, 0.3, 0],
                   }}
@@ -222,7 +222,7 @@ export function PremiumStackedProjectCard({
                 
                 {/* Glow Effect */}
                 <motion.div
-                  className="absolute -inset-1 rounded-xl blur-xl bg-purple-500/50 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"
+                  className="absolute -inset-1 rounded-xl blur-xl bg-primary/60 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"
                 />
 
                 {/* Content */}

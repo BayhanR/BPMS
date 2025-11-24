@@ -23,7 +23,7 @@ export function LoadingSkeleton({ className, count = 1 }: LoadingSkeletonProps) 
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute rounded-full bg-purple-500/30"
+          className="absolute rounded-full bg-primary/30"
           style={{
             width: 4,
             height: 4,

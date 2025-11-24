@@ -4,6 +4,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { useSidebarContext } from "@/components/sidebar-context";
 import {
   FolderKanban,
   Calendar,
@@ -38,11 +39,19 @@ const projectSidebarItems = [
 export default function ProjectLayout({ children }: ProjectLayoutProps) {
   const params = useParams();
   const projectId = params.id as string;
+  const { sidebarWidth } = useSidebarContext();
+  const contentStyle = React.useMemo(
+    () => ({
+      paddingLeft: sidebarWidth,
+      transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
+    }),
+    [sidebarWidth]
+  );
 
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col md:ml-80 ml-0">
+      <div className="flex-1 flex flex-col" style={contentStyle}>
         <Topbar />
         <div className="flex-1 flex overflow-hidden flex-col md:flex-row">
           {/* Project Sidebar */}
@@ -101,7 +110,7 @@ export default function ProjectLayout({ children }: ProjectLayoutProps) {
 
                     {/* Active Indicator */}
                     <motion.div
-                      className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-r-full opacity-0 group-hover:opacity-100"
+                      className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-r-full opacity-0 group-hover:opacity-100"
                       initial={false}
                     />
                   </motion.a>
@@ -112,13 +121,13 @@ export default function ProjectLayout({ children }: ProjectLayoutProps) {
             {/* Footer */}
             <div className="p-4 border-t border-white/10">
               <motion.div
-                className="rounded-xl bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-white/10 p-4"
+                className="rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 border border-white/10 p-4"
                 whileHover={{ scale: 1.02 }}
               >
                 <p className="text-sm font-medium text-white mb-1">Proje İlerlemesi</p>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: "65%" }}
                     transition={{ duration: 1, delay: 0.5 }}

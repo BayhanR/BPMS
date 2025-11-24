@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSidebarContext } from "@/components/sidebar-context";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -27,10 +28,11 @@ const menuItems = [
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 
-export function Sidebar({ collapsed: initialCollapsed = false, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed: initialCollapsed = true, onToggle }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(initialCollapsed);
   const [hovered, setHovered] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const { setSidebarWidth } = useSidebarContext();
 
   // Mobile detection
   const [isMobile, setIsMobile] = React.useState(false);
@@ -48,13 +50,24 @@ export function Sidebar({ collapsed: initialCollapsed = false, onToggle }: Sideb
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  const COLLAPSED_WIDTH = 96;
+  const EXPANDED_WIDTH = 280;
+
   const isExpanded = isMobile ? mobileOpen : (collapsed ? hovered : true);
+
+  React.useEffect(() => {
+    if (isMobile) {
+      setSidebarWidth(0);
+    } else {
+      setSidebarWidth(isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH);
+    }
+  }, [isExpanded, isMobile, setSidebarWidth]);
 
   const toggle = () => {
     if (isMobile) {
-      setMobileOpen(!mobileOpen);
+      setMobileOpen((prev) => !prev);
     } else {
-      setCollapsed(!collapsed);
+      setCollapsed((prev) => !prev);
     }
     onToggle?.();
   };
@@ -88,7 +101,6 @@ export function Sidebar({ collapsed: initialCollapsed = false, onToggle }: Sideb
             boxShadow: "4px 0 24px rgba(139, 92, 246, 0.1)",
           }}
         >
-          {/* Mobile sidebar content */}
           <SidebarContent
             isExpanded={true}
             onToggle={toggle}
@@ -128,7 +140,7 @@ export function Sidebar({ collapsed: initialCollapsed = false, onToggle }: Sideb
         )}
         initial={false}
         animate={{
-          width: isExpanded ? 280 : 80,
+          width: isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH,
         }}
         onHoverStart={() => !isMobile && setHovered(true)}
         onHoverEnd={() => !isMobile && setHovered(false)}
@@ -138,7 +150,6 @@ export function Sidebar({ collapsed: initialCollapsed = false, onToggle }: Sideb
       >
         <SidebarContent
           isExpanded={isExpanded}
-          onToggle={toggle}
           isMobile={false}
         />
       </motion.aside>
@@ -152,13 +163,17 @@ function SidebarContent({
   isMobile,
 }: {
   isExpanded: boolean;
-  onToggle: () => void;
+  onToggle?: () => void;
   isMobile: boolean;
 }) {
   return (
     <div className="flex flex-col h-full p-4">
-        {/* Logo & Toggle */}
-        <div className="flex items-center justify-between mb-8">
+        <div
+          className={cn(
+            "flex items-center mb-8",
+            isExpanded ? ((isMobile && onToggle) ? "justify-between" : "justify-start") : "justify-center"
+          )}
+        >
           <AnimatePresence mode="wait">
             {isExpanded ? (
               <motion.div
@@ -168,10 +183,10 @@ function SidebarContent({
                 exit={{ opacity: 0, x: -20 }}
                 className="flex items-center gap-2"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   BPMS
                 </span>
               </motion.div>
@@ -181,25 +196,23 @@ function SidebarContent({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mx-auto"
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto"
               >
                 <Sparkles className="w-5 h-5 text-white" />
               </motion.div>
             )}
           </AnimatePresence>
 
-          <motion.button
-            onClick={onToggle}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isMobile || !isExpanded ? (
+          {isMobile && onToggle && (
+            <motion.button
+              onClick={onToggle}
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <X className="w-5 h-5 text-white/70" />
-            ) : (
-              <Menu className="w-5 h-5 text-white/70" />
-            )}
-          </motion.button>
+            </motion.button>
+          )}
         </div>
 
         {/* Menu Items */}
@@ -235,7 +248,7 @@ function SidebarContent({
               
               {/* Active Indicator */}
               <motion.div
-                className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-r-full opacity-0 group-hover:opacity-100"
+                className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-r-full opacity-0 group-hover:opacity-100"
                 initial={false}
               />
             </motion.a>
@@ -251,7 +264,7 @@ function SidebarContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex-shrink-0" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0" />
           <AnimatePresence>
             {isExpanded && (
               <motion.div

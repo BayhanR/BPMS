@@ -43,7 +43,7 @@ export function FloatingGlassCard({
         damping: 20,
       }}
     >
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/15 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="relative z-10">{children}</div>
     </motion.div>
   );

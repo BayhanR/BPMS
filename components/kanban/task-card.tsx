@@ -155,7 +155,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
                   {task.assignees.slice(0, 3).map((assignee, idx) => (
                     <motion.div
                       key={assignee.id}
-                      className="w-7 h-7 rounded-full border-2 border-white/20 bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-xs font-semibold text-white"
+                      className="w-7 h-7 rounded-full border-2 border-white/20 bg-gradient-to-br from-primary to-accent flex items-center justify-center text-xs font-semibold text-white"
                       style={{ zIndex: 10 - idx }}
                       whileHover={{ scale: 1.2, zIndex: 20 }}
                     >

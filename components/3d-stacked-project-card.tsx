@@ -124,11 +124,11 @@ export function StackedProjectCard({
             "group"
           )}
           style={{
-            borderColor: `rgba(139, 92, 246, ${0.3 + depth * 0.2})`,
-            boxShadow: `0 20px 60px rgba(139, 92, 246, ${0.3 + depth * 0.2}), 0 0 0 1px rgba(255, 255, 255, 0.1) inset`,
+            borderColor: `rgba(255, 30, 86, ${0.3 + depth * 0.2})`,
+            boxShadow: `0 20px 60px rgba(255, 30, 86, ${0.3 + depth * 0.2}), 0 0 0 1px rgba(255, 255, 255, 0.08) inset`,
           }}
           whileHover={{
-            boxShadow: `0 30px 80px rgba(139, 92, 246, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 0 100px rgba(139, 92, 246, 0.4)`,
+            boxShadow: `0 30px 80px rgba(255, 30, 86, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2) inset, 0 0 100px rgba(255, 0, 110, 0.4)`,
           }}
         >
           {/* Gradient Background */}
@@ -143,7 +143,7 @@ export function StackedProjectCard({
           <motion.div
             className="absolute inset-0 rounded-3xl"
             style={{
-              background: `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(139, 92, 246, 0.4), transparent 70%)`,
+              background: `radial-gradient(circle at ${mouseX}px ${mouseY}px, rgba(255, 30, 86, 0.4), transparent 70%)`,
               opacity: glowOpacity * (1 - depth),
             }}
           />
@@ -152,7 +152,7 @@ export function StackedProjectCard({
           <motion.div
             className="absolute -inset-1 rounded-3xl blur-xl opacity-0 transition-opacity duration-300 group-hover:opacity-50"
             style={{
-              background: `linear-gradient(135deg, ${project.color}, #6366f1)`,
+              background: `linear-gradient(135deg, ${project.color}, #ff1e56)`,
             }}
           />
 
@@ -160,14 +160,14 @@ export function StackedProjectCard({
           <div className="relative z-10 h-full p-6 flex flex-col justify-between">
             <div>
               <div className="flex items-start justify-between mb-3">
-                <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">
+                <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors">
                   {project.name}
                 </h3>
                 <motion.div
                   whileHover={{ rotate: 45, scale: 1.2 }}
                   transition={{ type: "spring", stiffness: 400 }}
                 >
-                  <ArrowUpRight className="w-5 h-5 text-purple-400" />
+                  <ArrowUpRight className="w-5 h-5 text-primary" />
                 </motion.div>
               </div>
               <p className="text-sm text-white/60 mb-4 line-clamp-2">
@@ -184,7 +184,7 @@ export function StackedProjectCard({
                 </div>
                 <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-primary to-accent rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${project.progress}%` }}
                     transition={{
@@ -203,7 +203,7 @@ export function StackedProjectCard({
                   <Users className="w-4 h-4" />
                   <span>{project.members} members</span>
                 </div>
-                <span className="px-2 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                <span className="px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/40">
                   {project.status}
                 </span>
               </div>

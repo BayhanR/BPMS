@@ -102,7 +102,7 @@ export function WorkspaceInviteModal({
                     >
                       {/* Purple Glow */}
                       <motion.div
-                        className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-purple-500 to-indigo-600 blur-xl opacity-50"
+                        className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary to-accent blur-xl opacity-50"
                         animate={{
                           opacity: [0.3, 0.5, 0.3],
                           scale: [1, 1.05, 1],
@@ -206,7 +206,7 @@ export function WorkspaceInviteModal({
                           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Button
                               onClick={handleSubmit}
-                              className="px-6 bg-gradient-to-r from-purple-500 to-indigo-600 text-white hover:from-purple-600 hover:to-indigo-700 transition-all shadow-lg shadow-purple-500/25"
+                              className="px-6 bg-gradient-to-r from-primary to-accent text-white hover:brightness-110 transition-all shadow-lg shadow-primary/30"
                             >
                               Daveti Kabul Et
                             </Button>
