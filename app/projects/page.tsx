@@ -102,6 +102,11 @@ export default function ProjectsPage() {
   const [navigationDirection, setNavigationDirection] = React.useState<"left" | "right">("right");
   const selectedIndex = projects.findIndex((project) => project.id === selectedId);
   const focusProject = projects[selectedIndex];
+  const [viewMode, setViewMode] = React.useState<"spatial" | "classic">("spatial");
+  const viewOptions: Array<{ label: string; value: "spatial" | "classic" }> = [
+    { label: "Spatial Deck", value: "spatial" },
+    { label: "Klasik Liste", value: "classic" },
+  ];
   const { sidebarWidth } = useSidebarContext();
   const contentStyle = React.useMemo(
     () => ({
@@ -162,9 +167,34 @@ export default function ProjectsPage() {
             <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2">Projeler</h1>
-                <p className="text-white/60">Focus + Deck · Yeni nesil proje seçicisi</p>
+                <p className="text-white/60">
+                  {viewMode === "spatial" ? "Focus + Deck · Yeni nesil proje seçicisi" : "Klasik liste · Hafif animasyonlu görünüm"}
+                </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap justify-end">
+                <div className="flex items-center">
+                  <div className="flex rounded-full border border-white/15 bg-white/5 p-1 text-sm text-white/60">
+                    {viewOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => setViewMode(option.value)}
+                        className={cn(
+                          "relative px-4 py-2 rounded-full font-medium transition-colors",
+                          viewMode === option.value ? "text-white" : "text-white/50"
+                        )}
+                      >
+                        {viewMode === option.value && (
+                          <motion.span
+                            layoutId="view-mode-pill"
+                            className="absolute inset-0 rounded-full bg-white/15"
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex items-center gap-2">
                   <motion.button
                     onClick={() => {
@@ -218,67 +248,76 @@ export default function ProjectsPage() {
               </div>
             </div>
 
-            {/* Focus + Deck layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] gap-0 items-center max-w-[1600px] mx-auto">
-              <DeckColumn
-                projects={leftDeck}
-                side="left"
-                selectedId={selectedId}
-                onSelect={(id) => {
-                  setNavigationDirection("left");
-                  setSelectedId(id);
-                }}
-              />
-
-              <div className="relative z-[100] min-h-[500px] flex items-center justify-center w-full">
-                <AnimatePresence mode="wait">
-                  <FocusCard 
-                    key={focusProject.id} 
-                    project={focusProject} 
-                    direction={navigationDirection}
+            {viewMode === "spatial" ? (
+              <>
+                <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] gap-0 items-center max-w-[1600px] mx-auto">
+                  <DeckColumn
+                    projects={leftDeck}
+                    side="left"
+                    onSelect={(id) => {
+                      setNavigationDirection("left");
+                      setSelectedId(id);
+                    }}
                   />
-                </AnimatePresence>
-              </div>
 
-              <DeckColumn
-                projects={rightDeck}
-                side="right"
+                  <div className="relative z-[100] min-h-[500px] flex items-center justify-center w-full">
+                    <AnimatePresence mode="wait">
+                      <FocusCard 
+                        key={focusProject.id} 
+                        project={focusProject} 
+                        direction={navigationDirection}
+                      />
+                    </AnimatePresence>
+                  </div>
+
+                  <DeckColumn
+                    projects={rightDeck}
+                    side="right"
+                    onSelect={(id) => {
+                      setNavigationDirection("right");
+                      setSelectedId(id);
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 xl:hidden">
+                  {projects
+                    .filter((project) => project.id !== focusProject.id)
+                    .map((project) => (
+                      <motion.button
+                        key={project.id}
+                        onClick={() => setSelectedId(project.id)}
+                        className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-colors"
+                        whileHover={{ y: -4 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
+                            style={{
+                              background: `linear-gradient(135deg, ${project.color}, ${project.color}80)`,
+                            }}
+                          >
+                            <project.icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-white">{project.name}</p>
+                            <p className="text-xs text-white/60">{project.taskCount} tasks</p>
+                          </div>
+                        </div>
+                      </motion.button>
+                    ))}
+                </div>
+              </>
+            ) : (
+              <SimpleProjectGrid
+                projects={projects}
                 selectedId={selectedId}
                 onSelect={(id) => {
-                  setNavigationDirection("right");
                   setSelectedId(id);
+                  setNavigationDirection("right");
                 }}
               />
-            </div>
-
-            {/* Mobile deck */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 xl:hidden">
-              {projects
-                .filter((project) => project.id !== focusProject.id)
-                .map((project) => (
-                  <motion.button
-                    key={project.id}
-                    onClick={() => setSelectedId(project.id)}
-                    className="rounded-2xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-colors"
-                    whileHover={{ y: -4 }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
-                        style={{
-                          background: `linear-gradient(135deg, ${project.color}, ${project.color}80)`,
-                        }}
-                      >
-                        <project.icon className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-white">{project.name}</p>
-                        <p className="text-xs text-white/60">{project.taskCount} tasks</p>
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
-            </div>
+            )}
           </motion.div>
         </main>
       </div>
@@ -422,14 +461,14 @@ function FocusCard({ project, direction }: { project: Project; direction: "left"
 function DeckColumn({
   projects,
   side,
-  selectedId,
   onSelect,
 }: {
   projects: Project[];
   side: "left" | "right";
-  selectedId: string;
   onSelect: (id: string) => void;
 }) {
+  const [hoveredId, setHoveredId] = React.useState<string | null>(null);
+
   if (!projects.length) {
     return <div className="hidden xl:flex w-full justify-center" />;
   }
@@ -437,31 +476,33 @@ function DeckColumn({
   const ordered = side === "left" ? [...projects].reverse() : projects;
 
   return (
-    <div className={cn(
-      "hidden xl:flex w-full items-center relative z-10",
-      side === "left" ? "justify-end" : "justify-start",
-      side === "right" && "-ml-32"
-    )}>
-      <div className="relative w-[200px] h-[500px] overflow-visible">
-        <AnimatePresence>
-          {ordered.map((project, idx) => {
-            const isSelected = project.id === selectedId;
-            const depth = idx;
-            const xOffset = (depth + 1) * 20 * (side === "left" ? -1 : 1);
-            const yOffset = depth * 25;
-            return (
-              <DeckCard
-                key={project.id}
-                project={project}
-                side={side}
-                isSelected={isSelected}
-                style={{ x: xOffset, y: yOffset, zIndex: 20 - depth }}
-                onSelect={onSelect}
-                delay={depth * 0.15}
-              />
-            );
-          })}
-        </AnimatePresence>
+    <div
+      className={cn(
+        "hidden xl:flex w-full items-center relative z-10",
+        side === "left" ? "justify-end" : "justify-start",
+        side === "right" && "-ml-32"
+      )}
+      onMouseLeave={() => setHoveredId(null)}
+    >
+      <div className="relative w-[220px] h-[520px] overflow-visible">
+        {ordered.map((project, idx) => {
+          const depth = idx;
+          const xOffset = (depth + 1) * 22 * (side === "left" ? -1 : 1);
+          const yOffset = depth * 28;
+          return (
+            <DeckCard
+              key={project.id}
+              project={project}
+              side={side}
+              style={{ x: xOffset, y: yOffset, zIndex: 20 - depth }}
+              isHovering={hoveredId === project.id}
+              onHoverStart={() => setHoveredId(project.id)}
+              onHoverEnd={() => setHoveredId((prev) => (prev === project.id ? null : prev))}
+              onSelect={onSelect}
+              delay={depth * 0.12}
+            />
+          );
+        })}
       </div>
     </div>
   );
@@ -471,21 +512,24 @@ function DeckCard({
   project,
   side,
   style,
-  isSelected,
+  isHovering,
+  onHoverStart,
+  onHoverEnd,
   onSelect,
   delay,
 }: {
   project: Project;
   side: "left" | "right";
   style: { x: number; y: number; zIndex: number };
-  isSelected: boolean;
+  isHovering: boolean;
+  onHoverStart: () => void;
+  onHoverEnd: () => void;
   onSelect: (id: string) => void;
   delay: number;
 }) {
-  const [isHovering, setIsHovering] = React.useState(false);
   const { x, y, zIndex } = style;
-  const hoverY = y - 8;
   const baseRotate = side === "left" ? -4 : 4;
+  const Icon = project.icon;
 
   return (
     <motion.div
@@ -497,50 +541,42 @@ function DeckCard({
         zIndex: isHovering ? 80 : zIndex,
       }}
       initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ 
-        opacity: isSelected ? 0 : (isHovering ? 0.9 : 0.6), 
-        scale: isSelected ? 0.6 : 1,
-        x: isSelected ? (side === "left" ? x - 120 : x + 120) : x,
-        rotate: isSelected ? (side === "left" ? -15 : 15) : baseRotate,
+      animate={{
+        opacity: isHovering ? 0.95 : 0.7,
+        scale: 1,
+        rotate: baseRotate,
       }}
-      exit={{ 
-        opacity: 0, 
-        scale: 0.4, 
-        x: side === "left" ? x - 200 : x + 200,
-        rotate: side === "left" ? -25 : 25,
-      }}
-      transition={{ 
-        delay: isSelected ? 0 : delay, 
-        type: "spring", 
-        stiffness: isSelected ? 500 : 300, 
-        damping: isSelected ? 32 : 28,
-        opacity: isSelected ? { duration: 0.08 } : { duration: 0.15 },
-        layout: { type: "spring", stiffness: 300, damping: 25 }
+      transition={{
+        delay,
+        type: "spring",
+        stiffness: 320,
+        damping: 30,
+        opacity: { duration: 0.2 },
       }}
     >
       <motion.button
         onClick={() => onSelect(project.id)}
-        className={`w-[180px] ${isSelected ? "pointer-events-none" : ""}`}
+        className="group w-[190px] origin-center"
         style={{ rotate: baseRotate }}
-        whileHover={!isSelected ? { y: -8, rotate: baseRotate } : {}}
-        onHoverStart={() => !isSelected && setIsHovering(true)}
-        onHoverEnd={() => setIsHovering(false)}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ y: -12, scale: 1.04 }}
+        onHoverStart={onHoverStart}
+        onHoverEnd={onHoverEnd}
+        whileTap={{ scale: 0.97 }}
       >
-      <motion.div
-        className="rounded-2xl border border-white/15 bg-[#1a1416]/80 backdrop-blur-xl p-4 text-left shadow-[0_12px_40px_rgba(5,5,8,0.6)] relative overflow-hidden"
-        animate={{
-          boxShadow: isHovering
-            ? "0 20px 50px rgba(244,63,94,0.25)"
-            : "0 12px 40px rgba(5,5,8,0.6)",
-        }}
-        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      >
+        <motion.div
+          className="rounded-2xl border border-white/15 bg-[#1a1416]/85 backdrop-blur-xl p-4 text-left shadow-[0_12px_40px_rgba(5,5,8,0.55)] relative overflow-hidden"
+          animate={{
+            boxShadow: isHovering
+              ? "0 30px 70px rgba(255,30,86,0.35)"
+              : "0 12px 40px rgba(5,5,8,0.55)",
+          }}
+          transition={{ type: "spring", stiffness: 220, damping: 22 }}
+        >
           <motion.div
-            className="absolute inset-0 opacity-0"
-            animate={{ opacity: isHovering ? 0.35 : 0 }}
+            className="absolute inset-[1px] rounded-[18px]"
+            animate={{ opacity: isHovering ? 0.4 : 0 }}
             style={{
-              background: `linear-gradient(135deg, ${project.color}, #ffffff22)`,
+              background: `linear-gradient(135deg, ${project.color}, rgba(255,255,255,0.08))`,
             }}
           />
           <div className="flex items-center gap-3 relative z-10">
@@ -548,7 +584,7 @@ function DeckCard({
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
               style={{ background: `linear-gradient(135deg, ${project.color}, ${project.color}90)` }}
             >
-              <project.icon className="w-5 h-5" />
+              <Icon className="w-5 h-5" />
             </div>
             <div>
               <p className="font-semibold text-white">{project.name}</p>
@@ -559,16 +595,9 @@ function DeckCard({
             <span>{project.status}</span>
             <span className="text-white/80">{project.progress}%</span>
           </div>
-          <motion.div
-            className="mt-3 text-[11px] text-white/70 leading-snug relative z-10"
-            initial={false}
-            animate={{
-              opacity: isHovering ? 1 : 0,
-              height: isHovering ? "auto" : 0,
-            }}
-          >
+          <div className="mt-3 text-[11px] text-white/70 leading-snug relative z-10 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-24 transition-all duration-300 ease-out">
             {project.description}
-          </motion.div>
+          </div>
         </motion.div>
       </motion.button>
     </motion.div>
@@ -581,6 +610,70 @@ function StatBlock({ label, value, sub }: { label: string; value: string; sub: s
       <p className="text-sm text-white/60 mb-1">{label}</p>
       <p className="text-3xl font-bold text-white">{value}</p>
       <p className="text-xs text-white/40">{sub}</p>
+    </div>
+  );
+}
+
+function SimpleProjectGrid({
+  projects,
+  selectedId,
+  onSelect,
+}: {
+  projects: Project[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+      {projects.map((project) => {
+        const Icon = project.icon;
+        const isActive = project.id === selectedId;
+        return (
+          <motion.article
+            key={project.id}
+            onClick={() => onSelect(project.id)}
+            className={cn(
+              "relative rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-2xl overflow-hidden cursor-pointer transition-all",
+              isActive && "border-[#ff1e56]/60 bg-white/10 shadow-[0_25px_80px_rgba(255,30,86,0.25)]"
+            )}
+            whileHover={{ y: -8, scale: 1.01 }}
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-white"
+                  style={{ background: `linear-gradient(135deg, ${project.color}, ${project.color}90)` }}
+                >
+                  <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold text-white">{project.name}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">{project.team}</p>
+                </div>
+              </div>
+              <span className="text-sm font-semibold text-white/70">{project.progress}%</span>
+            </div>
+            <p className="mt-3 text-sm text-white/65 line-clamp-3">{project.description}</p>
+            <div className="mt-4 flex items-center gap-3 text-xs text-white/60 flex-wrap">
+              <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5">{project.status}</span>
+              <span className="px-3 py-1 rounded-full border border-white/10">
+                {project.taskCount} görev
+              </span>
+              <span className="px-3 py-1 rounded-full border border-white/10">Teslim {project.deadline}</span>
+            </div>
+            <div className="mt-4">
+              <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-gradient-to-r from-[#ff1e56] via-[#ff1744] to-[#ff006e]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${project.progress}%` }}
+                  transition={{ type: "spring", stiffness: 140, damping: 22 }}
+                />
+              </div>
+            </div>
+          </motion.article>
+        );
+      })}
     </div>
   );
 }
