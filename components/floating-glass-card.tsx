@@ -21,14 +21,14 @@ export function FloatingGlassCard({
     <motion.div
       className={cn(
         "relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl",
-        "shadow-[0_8px_32px_0_rgba(139,92,246,0.1)]",
+        "shadow-[0_8px_32px_0_rgba(255,30,86,0.12)]",
         "transition-all duration-300 ease-out",
         className
       )}
       whileHover={{
         scale: hoverScale,
         y: -4,
-        boxShadow: `0 20px 60px rgba(139, 92, 246, ${glowIntensity})`,
+        boxShadow: `0 20px 60px rgba(255, 30, 86, ${glowIntensity})`,
         transition: {
           type: "spring",
           stiffness: 150,

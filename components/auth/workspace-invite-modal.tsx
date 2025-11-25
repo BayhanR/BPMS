@@ -21,21 +21,21 @@ const roles = [
     name: "Admin",
     description: "Tüm yetkilere sahip, workspace ayarlarını değiştirebilir",
     icon: Crown,
-    color: "#8b5cf6",
+    color: "#ff1e56",
   },
   {
     id: "editor",
     name: "Editor",
     description: "Projeler ve görevler oluşturup düzenleyebilir",
     icon: Edit3,
-    color: "#6366f1",
+    color: "#ff006e",
   },
   {
     id: "viewer",
     name: "Viewer",
     description: "Sadece görüntüleme yetkisi, değişiklik yapamaz",
     icon: Eye,
-    color: "#10b981",
+    color: "#ff4d6d",
   },
 ];
 
@@ -97,10 +97,10 @@ export function WorkspaceInviteModal({
                         "overflow-hidden"
                       )}
                       style={{
-                        boxShadow: "0 30px 80px rgba(139, 92, 246, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1) inset",
+                        boxShadow: "0 30px 80px rgba(255, 30, 86, 0.32), 0 0 0 1px rgba(255, 255, 255, 0.12) inset",
                       }}
                     >
-                      {/* Purple Glow */}
+                      {/* Crimson Glow */}
                       <motion.div
                         className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-primary to-accent blur-xl opacity-50"
                         animate={{

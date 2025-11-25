@@ -51,9 +51,9 @@ export function PremiumInput({
           )}
           style={{
             boxShadow: isFocused
-              ? "0 0 0 3px rgba(139, 92, 246, 0.3), 0 8px 32px rgba(139, 92, 246, 0.2)"
+              ? "0 0 0 3px rgba(255, 30, 86, 0.35), 0 8px 32px rgba(255, 30, 86, 0.2)"
               : "none",
-            borderColor: isFocused ? "rgba(139, 92, 246, 0.5)" : "rgba(255, 255, 255, 0.1)",
+            borderColor: isFocused ? "rgba(255, 30, 86, 0.5)" : "rgba(255, 255, 255, 0.1)",
           }}
         />
         {isFocused && (

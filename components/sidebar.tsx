@@ -98,7 +98,7 @@ export function Sidebar({ collapsed: initialCollapsed = true, onToggle }: Sideba
             damping: 20,
           }}
           style={{
-            boxShadow: "4px 0 24px rgba(139, 92, 246, 0.1)",
+            boxShadow: "4px 0 24px rgba(255, 30, 86, 0.18)",
           }}
         >
           <SidebarContent
@@ -145,7 +145,7 @@ export function Sidebar({ collapsed: initialCollapsed = true, onToggle }: Sideba
         onHoverStart={() => !isMobile && setHovered(true)}
         onHoverEnd={() => !isMobile && setHovered(false)}
         style={{
-          boxShadow: "4px 0 24px rgba(139, 92, 246, 0.1)",
+          boxShadow: "4px 0 24px rgba(255, 30, 86, 0.18)",
         }}
       >
         <SidebarContent

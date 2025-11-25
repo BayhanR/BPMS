@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen p-8">
+    <div className="relative flex items-center justify-center min-h-screen p-8 overflow-hidden">
       <motion.div
         className="text-center space-y-8"
         initial={{ opacity: 0, y: 20 }}
@@ -26,9 +26,9 @@ export default function LandingPage() {
             className="w-20 h-20 rounded-3xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl"
             animate={{
               boxShadow: [
-                "0 20px 60px rgba(139, 92, 246, 0.4)",
-                "0 30px 80px rgba(139, 92, 246, 0.6)",
-                "0 20px 60px rgba(139, 92, 246, 0.4)",
+                "0 20px 60px rgba(255, 30, 86, 0.4)",
+                "0 30px 80px rgba(255, 30, 86, 0.55)",
+                "0 20px 60px rgba(255, 30, 86, 0.4)",
               ],
             }}
             transition={{
@@ -60,9 +60,9 @@ export default function LandingPage() {
             className="text-4xl md:text-5xl font-bold text-white mb-4"
             animate={{
               textShadow: [
-                "0 0 20px rgba(139, 92, 246, 0.3)",
-                "0 0 40px rgba(139, 92, 246, 0.5)",
-                "0 0 20px rgba(139, 92, 246, 0.3)",
+                "0 0 20px rgba(255, 30, 86, 0.35)",
+                "0 0 40px rgba(255, 30, 86, 0.5)",
+                "0 0 20px rgba(255, 30, 86, 0.35)",
               ],
             }}
             transition={{

@@ -35,7 +35,7 @@ function buildMonthDays(anchor: Date): CalendarDay[] {
   const year = anchor.getFullYear();
   const month = anchor.getMonth();
   const startOfMonth = new Date(year, month, 1);
-  const startDay = (startOfMonth.getDay() + 6) % 7; // convert Sunday -> 6
+  const startDay = (startOfMonth.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   const days: CalendarDay[] = [];
@@ -97,210 +97,280 @@ export default function CalendarPage() {
     });
   };
 
-  const weeks: CalendarDay[][] = [];
-  for (let i = 0; i < days.length; i += 7) {
-    weeks.push(days.slice(i, i + 7));
-  }
-
-  const selectedWeekIndex = weeks.findIndex((week) =>
-    week.some((day) => day.date.toDateString() === selectedDate.toDateString())
-  );
-
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 flex flex-col" style={{ paddingLeft: sidebarWidth, transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }}>
+      <div
+        className="flex-1 flex flex-col"
+        style={{ paddingLeft: sidebarWidth, transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)" }}
+      >
         <Topbar />
         <main className="flex-1 overflow-y-auto p-4 md:p-8 relative">
-          <div className="pointer-events-none absolute inset-0 -z-10">
-            <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#111111] to-[#1a1a1a]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,30,86,0.15),transparent_55%)] animate-pulse" />
-            <div
-              className="absolute inset-0 opacity-[0.04] mix-blend-screen"
-              style={{
-                backgroundImage: `linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 45%), linear-gradient(20deg, rgba(255,0,110,0.08) 0%, transparent 40%)`,
-              }}
-            />
-          </div>
+          <AnimatedBackdrop />
 
           <motion.div
-            className="space-y-8"
-            initial={{ opacity: 0, y: 20 }}
+            className="space-y-10"
+            initial={{ opacity: 0, y: 32 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <header className="flex flex-wrap items-center justify-between gap-4">
+            <header className="flex flex-wrap items-center justify-between gap-6">
               <div>
-                <p className="text-sm uppercase tracking-[0.4em] text-white/50">Takvim</p>
-                <h1 className="text-4xl font-semibold text-white">
+                <p className="text-xs uppercase tracking-[0.45em] text-white/50">Spatial Calendar</p>
+                <h1 className="text-4xl md:text-5xl font-semibold text-white">
                   {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
                 </h1>
               </div>
-              <div className="flex items-center gap-3">
-                <motion.button
-                  className="w-12 h-12 rounded-full border border-white/10 bg-white/5 text-white/80"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => changeMonth(-1)}
-                >
-                  ←
-                </motion.button>
-                <motion.button
-                  className="w-12 h-12 rounded-full border border-white/10 bg-white/5 text-white/80"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => changeMonth(1)}
-                >
-                  →
-                </motion.button>
+              <div className="flex items-center gap-4">
+                <OrbButton direction="left" onClick={() => changeMonth(-1)} />
+                <OrbButton direction="right" onClick={() => changeMonth(1)} />
               </div>
             </header>
 
-            <div className="overflow-x-auto pb-4">
-              <div className="flex gap-3 min-w-max">
-                {weeks.map((week, idx) => (
-                  <motion.div
-                    key={`week-${idx}`}
-                    className={cn(
-                      "flex gap-1 rounded-2xl border border-white/5 px-4 py-3 backdrop-blur-xl bg-white/5",
-                      idx === selectedWeekIndex && "border-primary/70 bg-primary/10"
-                    )}
-                    whileHover={{ y: -4 }}
-                  >
-                    {week.map((day) => (
-                      <div
-                        key={day.date.toISOString()}
-                        className={cn(
-                          "text-xs font-semibold px-2 py-1 rounded-xl",
-                          day.date.toDateString() === selectedDate.toDateString()
-                            ? "bg-primary/20 text-white"
-                            : "text-white/60"
-                        )}
-                      >
-                        {day.date.getDate()}
-                      </div>
-                    ))}
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-              {weekDays.map((day) => (
-                <p key={day} className="hidden xl:block text-center text-xs uppercase tracking-[0.3em] text-white/40">
-                  {day}
-                </p>
-              ))}
-
-              {days.map((day) => {
-                const key = day.date.toDateString();
-                const tasks = tasksByDate[key] ?? [];
-                const isToday = key === todayKey;
-                const isSelected = key === selectedDate.toDateString();
-
-                return (
-                  <Tilt key={key} tiltMaxAngleX={8} tiltMaxAngleY={8} scale={isSelected ? 1.05 : 1.01} transitionSpeed={1000}>
-                    <motion.button
-                      onClick={() => setSelectedDate(day.date)}
-                      className={cn(
-                        "relative w-full h-40 rounded-3xl border backdrop-blur-xl text-left p-4 flex flex-col justify-between",
-                        "border-white/5 bg-white/5 text-white",
-                        !day.inCurrentMonth && "opacity-40",
-                        isSelected && "border-primary/70 shadow-[0_25px_80px_rgba(255,30,86,0.35)]"
-                      )}
-                      whileHover={{ y: -6 }}
-                    >
-                      {isToday && (
-                        <span className="absolute top-3 right-3 h-2 w-2 rounded-full bg-primary animate-ping" />
-                      )}
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.2em] text-white/40">{weekDays[(day.date.getDay() + 6) % 7]}</p>
-                        <h3 className="text-2xl font-semibold">{day.date.getDate()}</h3>
-                      </div>
-                      <div>
-                        {tasks.length > 0 ? (
-                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-semibold border border-primary/40">
-                            {tasks.length} task
-                          </div>
-                        ) : (
-                          <p className="text-xs text-white/40">Boş gün</p>
-                        )}
-                      </div>
-                    </motion.button>
-                  </Tilt>
-                );
-              })}
-
-              <motion.div
-                className="absolute top-0 right-0 h-full w-full lg:w-96 lg:translate-x-full lg:pl-6 pointer-events-none lg:pointer-events-auto"
-                initial={false}
-                animate={{
-                  translateX: selectedTasks.length ? 0 : 20,
-                  opacity: selectedTasks.length ? 1 : 0,
-                }}
-                transition={{ type: "spring", stiffness: 120, damping: 20 }}
-              >
-                <div className="sticky top-4 space-y-4">
-                  <div className="rounded-3xl border border-white/10 bg-[#121217]/90 backdrop-blur-2xl p-6 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-                    <p className="text-sm text-white/50 uppercase tracking-[0.3em]">Günün Task'ları</p>
-                    <h3 className="text-2xl font-semibold text-white mt-2">
-                      {selectedDate.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
-                    </h3>
-                    <p className="text-white/60 text-sm mt-2">
-                      {selectedTasks.length > 0 ? `${selectedTasks.length} görev planlandı.` : "Bu güne atanan görev yok."}
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <section className="space-y-5">
+                <div className="grid grid-cols-7 gap-3">
+                  {weekDays.map((day) => (
+                    <p key={day} className="text-center text-xs uppercase tracking-[0.3em] text-white/40">
+                      {day}
                     </p>
-                  </div>
-
-                  {selectedTasks.length > 0 && (
-                    <Reorder.Group axis="y" values={orderedTasks} onReorder={setOrderedTasks} className="space-y-3">
-                      {selectedTasks.map((task) => {
-                        const assignee = mockUsers.find((user) => user.id === task.assigneeId);
-                        const project = mockProjects.find((proj) => proj.id === task.projectId);
-                        return (
-                          <Reorder.Item key={task.id} value={task.id}>
-                            <motion.div
-                              className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 flex flex-col gap-2 cursor-grab active:cursor-grabbing"
-                              whileHover={{ y: -4 }}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">{project?.name}</p>
-                                  <h4 className="text-white font-semibold">{task.title}</h4>
-                                </div>
-                                <span
-                                  className={cn(
-                                    "px-3 py-1 rounded-full text-xs font-semibold capitalize",
-                                    task.status === "done" && "bg-green-500/20 text-green-300",
-                                    task.status === "doing" && "bg-primary/20 text-primary",
-                                    task.status === "todo" && "bg-white/10 text-white/70"
-                                  )}
-                                >
-                                  {task.status}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs text-white/60">
-                                <div className="flex items-center gap-2">
-                                  {assignee && (
-                                    <>
-                                      <img src={assignee.avatarUrl} alt={assignee.name} className="w-6 h-6 rounded-full border border-white/20" />
-                                      <span>{assignee.name}</span>
-                                    </>
-                                  )}
-                                </div>
-                                <span>{new Date(task.dueDate).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
-                              </div>
-                            </motion.div>
-                          </Reorder.Item>
-                        );
-                      })}
-                    </Reorder.Group>
-                  )}
+                  ))}
                 </div>
-              </motion.div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+                  {days.map((day) => {
+                    const key = day.date.toDateString();
+                    const tasks = tasksByDate[key] ?? [];
+                    const isToday = key === todayKey;
+                    const isSelected = key === selectedDate.toDateString();
+                    const hasTasks = tasks.length > 0;
+
+                    return (
+                      <Tilt key={key} tiltMaxAngleX={7} tiltMaxAngleY={7} scale={isSelected ? 1.05 : 1.01} transitionSpeed={1200}>
+                        <motion.button
+                          onClick={() => setSelectedDate(day.date)}
+                          className={cn(
+                            "group relative w-full h-48 rounded-[28px] border p-5 text-left flex flex-col justify-between overflow-hidden",
+                            "bg-gradient-to-br from-white/5 via-white/2 to-white/5 border-white/10 backdrop-blur-2xl",
+                            !day.inCurrentMonth && "opacity-30",
+                            isSelected && "border-[#ff1e56]/60 shadow-[0_35px_120px_rgba(255,30,86,0.35)]"
+                          )}
+                          whileHover={{ y: -6 }}
+                        >
+                          {isToday && <PulseRing />}
+
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.4em] text-white/50">
+                                {weekDays[(day.date.getDay() + 6) % 7]}
+                              </p>
+                              <h3 className="text-3xl font-bold text-white">{day.date.getDate()}</h3>
+                            </div>
+                            {hasTasks && (
+                              <span className="rounded-full border border-[#ff1e56]/30 bg-[#ff1e56]/10 px-3 py-1 text-xs font-semibold text-white flex items-center gap-1">
+                                <span className="inline-flex h-2 w-2 rounded-full bg-[#ff1e56]" />
+                                {tasks.length} task
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="space-y-1 text-xs">
+                            {tasks.slice(0, 2).map((task) => (
+                              <motion.div
+                                key={task.id}
+                                className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-1 text-white/70"
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.05 }}
+                              >
+                                <span className="h-2 w-2 rounded-full bg-[#ff1e56]" />
+                                <p className="truncate">{task.title}</p>
+                              </motion.div>
+                            ))}
+
+                            {!hasTasks && <p className="text-white/40">Planlanmış görev yok</p>}
+                          </div>
+                        </motion.button>
+                      </Tilt>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <TaskPanel
+                selectedDate={selectedDate}
+                selectedTasks={selectedTasks}
+                orderedTasks={orderedTasks}
+                setOrderedTasks={setOrderedTasks}
+              />
             </div>
           </motion.div>
         </main>
       </div>
+    </div>
+  );
+}
+
+function TaskPanel({
+  selectedDate,
+  selectedTasks,
+  orderedTasks,
+  setOrderedTasks,
+}: {
+  selectedDate: Date;
+  selectedTasks: typeof mockTasks;
+  orderedTasks: string[];
+  setOrderedTasks: (ids: string[]) => void;
+}) {
+  return (
+    <motion.aside
+      className="relative rounded-[32px] border border-white/10 bg-[#0f0f10]/70 backdrop-blur-3xl p-6 shadow-[0_30px_120px_rgba(0,0,0,0.55)] overflow-hidden"
+      initial={{ opacity: 0, x: 40 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ type: "spring", stiffness: 140, damping: 24 }}
+    >
+      <motion.div
+        className="absolute inset-12 rounded-[40px] bg-gradient-to-br from-[#ff1e56]/10 via-transparent to-[#ff006e]/10 blur-3xl"
+        animate={{ opacity: [0.2, 0.4, 0.2], rotate: [0, 6, 0] }}
+        transition={{ duration: 8, repeat: Infinity }}
+      />
+
+      <div className="relative z-10 space-y-6">
+        <div>
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Günlük Akış</p>
+          <h2 className="mt-2 text-3xl font-semibold">
+            {selectedDate.toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" })}
+          </h2>
+          <p className="text-sm text-white/60">
+            {selectedTasks.length > 0 ? `${selectedTasks.length} görev listelendi.` : "Bu güne bağlı görev bulunmuyor."}
+          </p>
+        </div>
+
+        {selectedTasks.length > 0 ? (
+          <Reorder.Group axis="y" values={orderedTasks} onReorder={setOrderedTasks} className="space-y-4">
+            {selectedTasks.map((task) => {
+              const assignee = mockUsers.find((user) => user.id === task.assigneeId);
+              const project = mockProjects.find((proj) => proj.id === task.projectId);
+              return (
+                <Reorder.Item key={task.id} value={task.id} className="cursor-grab active:cursor-grabbing">
+                  <motion.div
+                    className="relative rounded-[24px] border border-white/10 bg-white/5 p-4"
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    transition={{ type: "spring", stiffness: 160, damping: 18 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.4em] text-white/40">{project?.name}</p>
+                        <h3 className="text-white font-semibold">{task.title}</h3>
+                      </div>
+                      <span
+                        className={cn(
+                          "rounded-full px-3 py-1 text-xs font-semibold capitalize border",
+                          task.status === "done" && "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+                          task.status === "doing" && "bg-[#ff1e56]/15 text-[#ff879d] border-[#ff1e56]/40",
+                          task.status === "todo" && "bg-white/5 text-white/60 border-white/10"
+                        )}
+                      >
+                        {task.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between text-xs text-white/60">
+                      <div className="flex items-center gap-2">
+                        {assignee && (
+                          <>
+                            <img
+                              src={assignee.avatarUrl}
+                              alt={assignee.name}
+                              className="h-7 w-7 rounded-full border border-white/20"
+                            />
+                            <span>{assignee.name}</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span>{new Date(task.startDate ?? task.dueDate).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span className="text-white/30">→</span>
+                        <span>{new Date(task.dueDate).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Reorder.Item>
+              );
+            })}
+          </Reorder.Group>
+        ) : (
+          <motion.div
+            className="rounded-[28px] border border-dashed border-white/15 bg-white/5 p-6 text-center text-white/60"
+            initial={{ opacity: 0.5 }}
+            animate={{ opacity: 1 }}
+          >
+            <p>Sükunet modu. Bugüne tanımlı task yok.</p>
+          </motion.div>
+        )}
+      </div>
+    </motion.aside>
+  );
+}
+
+function OrbButton({ direction, onClick }: { direction: "left" | "right"; onClick: () => void }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="relative h-14 w-14 rounded-full border border-white/10 bg-white/5 text-white flex items-center justify-center overflow-hidden"
+      whileHover={{ scale: 1.08, y: -2 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      <motion.div
+        className="absolute inset-0 rounded-full bg-gradient-to-br from-[#ff1e56]/15 to-[#ff006e]/20 blur-xl"
+        animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.8, 0.6] }}
+        transition={{ duration: 3, repeat: Infinity }}
+      />
+      <span className="relative z-10 text-xl">{direction === "left" ? "←" : "→"}</span>
+    </motion.button>
+  );
+}
+
+function PulseRing() {
+  return (
+    <motion.div
+      className="absolute inset-0 rounded-[28px] border border-[#ff1e56]/40"
+      animate={{ scale: [1, 1.05, 1], opacity: [0.7, 0, 0.7] }}
+      transition={{ duration: 2.2, repeat: Infinity }}
+    />
+  );
+}
+
+function AnimatedBackdrop() {
+  return (
+    <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-[#111111] to-[#1a1a1a]" />
+      {[...Array(20)].map((_, idx) => (
+        <motion.div
+          key={`particle-${idx}`}
+          className="absolute h-2 w-2 rounded-full bg-[#ff1e56]/40 blur-[2px]"
+          style={{
+            top: `${Math.random() * 100}%`,
+            left: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, idx % 2 === 0 ? -20 : 20, 0],
+            x: [0, idx % 2 === 0 ? 15 : -15, 0],
+            opacity: [0.2, 0.7, 0.2],
+          }}
+          transition={{
+            duration: 6 + idx * 0.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+      <div
+        className="absolute inset-0 opacity-[0.04] mix-blend-screen"
+        style={{
+          backgroundImage: `linear-gradient(120deg, rgba(255,255,255,0.04) 0%, transparent 45%), linear-gradient(300deg, rgba(255,30,86,0.12) 0%, transparent 55%)`,
+        }}
+      />
     </div>
   );
 }

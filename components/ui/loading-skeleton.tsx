@@ -29,7 +29,7 @@ export function LoadingSkeleton({ className, count = 1 }: LoadingSkeletonProps) 
             height: 4,
             left: `${particle.x}%`,
             top: `${particle.y}%`,
-            boxShadow: "0 0 8px rgba(139, 92, 246, 0.5)",
+            boxShadow: "0 0 8px rgba(255, 30, 86, 0.5)",
           }}
           animate={{
             opacity: [0.3, 1, 0.3],

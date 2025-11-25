@@ -88,6 +88,8 @@ model Task {
   labels      TaskLabel[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+
+  @@index([projectId, order])
 }
 
 model Label {

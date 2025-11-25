@@ -32,9 +32,9 @@ npm start
 ## 🎨 Tasarım Sistemi
 
 ### Renk Paleti
-- Primary: `#8b5cf6` (Purple)
-- Secondary: `#6366f1` (Indigo)
-- Gradient: `from #6b21a8 to #1e1b4b`
+- Primary: `#ff1e56` (Crimson)
+- Accent: `#ff006e`
+- Gradient: `from #0a0a0a via #111111 to #1a1a1a`
 
 ### Glassmorphism
 Tüm card componentleri glassmorphism efekti ile:
@@ -89,14 +89,14 @@ components/
 ## 🎯 Sayfalar
 
 ### Landing Page (`/`)
-- Mor-indigo gradient background
+- Kırmızı-siyah mesh gradient background
 - Logo ve "Coming Soon" mesajı
-- Animated orbs ve glow effects
+- Animated crimson orbs ve glow effects
 
 ### Sign In (`/signin`)
 - Linear tarzı floating form
 - 3D tilt card
-- Purple glow effects
+- Crimson glow effects
 - Glassmorphism design
 
 ### Dashboard (`/dashboard`)

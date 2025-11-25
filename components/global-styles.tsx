@@ -12,7 +12,7 @@ export function GlobalButtonStyles() {
       button:not(:disabled):hover,
       [role="button"]:not(:disabled):hover {
         transform: scale(1.05) translateY(-2px);
-        filter: drop-shadow(0 8px 24px rgba(139, 92, 246, 0.3));
+        filter: drop-shadow(0 8px 24px rgba(255, 30, 86, 0.35));
       }
       
       button:not(:disabled):active,

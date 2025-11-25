@@ -387,7 +387,7 @@ function TemplateHeroCard({
           </div>
 
           <motion.div
-            className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold bg-gradient-to-r from-rose-500 to-indigo-500 shadow-lg shadow-rose-500/25"
+            className="mt-8 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl text-white font-semibold bg-gradient-to-r from-[#ff1e56] to-[#ff006e] shadow-lg shadow-[#ff1e56]/30"
             whileHover={{ scale: 1.05, x: 4 }}
           >
             Use Template

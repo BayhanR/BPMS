@@ -387,12 +387,12 @@ export default function KanbanBoardPage() {
               "group"
             )}
             style={{
-              boxShadow: "0 8px 32px rgba(139, 92, 246, 0.4)",
+              boxShadow: "0 8px 32px rgba(255, 30, 86, 0.38)",
             }}
             whileHover={{
               scale: 1.1,
               y: -4,
-              boxShadow: "0 12px 48px rgba(139, 92, 246, 0.6)",
+              boxShadow: "0 12px 48px rgba(255, 30, 86, 0.58)",
               transition: {
                 type: "spring",
                 stiffness: 150,
@@ -409,9 +409,9 @@ export default function KanbanBoardPage() {
             }}
             animate={{
               boxShadow: [
-                "0 8px 32px rgba(139, 92, 246, 0.4)",
-                "0 12px 48px rgba(139, 92, 246, 0.6)",
-                "0 8px 32px rgba(139, 92, 246, 0.4)",
+                "0 8px 32px rgba(255, 30, 86, 0.38)",
+                "0 12px 48px rgba(255, 30, 86, 0.58)",
+                "0 8px 32px rgba(255, 30, 86, 0.38)",
               ],
             }}
             transition={{

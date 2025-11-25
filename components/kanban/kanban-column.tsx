@@ -59,7 +59,7 @@ export function KanbanColumn({
           damping: 20,
         }}
         style={{
-          boxShadow: "0 8px 32px rgba(139, 92, 246, 0.1)",
+          boxShadow: "0 8px 32px rgba(255, 30, 86, 0.12)",
         }}
       >
         {/* Column Header */}

@@ -60,7 +60,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           y: -8,
           scale: 1.02,
           rotateY: 3,
-          boxShadow: "0 20px 60px rgba(139, 92, 246, 0.4)",
+          boxShadow: "0 20px 60px rgba(255, 30, 86, 0.4)",
           transition: {
             type: "spring",
             stiffness: 150,
@@ -73,7 +73,7 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
                 scale: 1.1,
                 opacity: 0.9,
                 rotateY: 5,
-                boxShadow: "0 30px 80px rgba(139, 92, 246, 0.6)",
+                boxShadow: "0 30px 80px rgba(255, 30, 86, 0.55)",
               }
             : {}
         }
@@ -84,11 +84,11 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
         }}
         style={{
           borderColor: isDragging
-            ? "rgba(139, 92, 246, 0.5)"
+            ? "rgba(255, 30, 86, 0.5)"
             : "rgba(255, 255, 255, 0.1)",
           boxShadow: isDragging
-            ? "0 0 0 2px rgba(139, 92, 246, 0.8), 0 30px 80px rgba(139, 92, 246, 0.6)"
-            : "0 8px 32px rgba(139, 92, 246, 0.1)",
+            ? "0 0 0 2px rgba(255, 30, 86, 0.8), 0 30px 80px rgba(255, 30, 86, 0.55)"
+            : "0 8px 32px rgba(255, 30, 86, 0.12)",
         }}
       >
         <Tilt

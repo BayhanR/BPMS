@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Tilt from "react-parallax-tilt";
 import Link from "next/link";
 import { Sidebar } from "@/components/sidebar";
@@ -99,6 +99,7 @@ const projects: Project[] = [
 
 export default function ProjectsPage() {
   const [selectedId, setSelectedId] = React.useState(projects[0].id);
+  const [navigationDirection, setNavigationDirection] = React.useState<"left" | "right">("right");
   const selectedIndex = projects.findIndex((project) => project.id === selectedId);
   const focusProject = projects[selectedIndex];
   const { sidebarWidth } = useSidebarContext();
@@ -112,6 +113,26 @@ export default function ProjectsPage() {
 
   const leftDeck = projects.slice(0, selectedIndex).slice(-3);
   const rightDeck = projects.slice(selectedIndex + 1).slice(0, 3);
+
+  // Klavye navigasyonu
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const currentIdx = projects.findIndex((p) => p.id === selectedId);
+      if (currentIdx === -1) return;
+      
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setNavigationDirection("left");
+        setSelectedId(projects[(currentIdx - 1 + projects.length) % projects.length].id);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setNavigationDirection("right");
+        setSelectedId(projects[(currentIdx + 1) % projects.length].id);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedId]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -146,27 +167,41 @@ export default function ProjectsPage() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-2">
                   <motion.button
-                    onClick={() => setSelectedId(projects[(selectedIndex - 1 + projects.length) % projects.length].id)}
-                    className="w-10 h-10 rounded-xl border border-white/10 text-white/70 transition-colors"
-                    style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                    onClick={() => {
+                      setNavigationDirection("left");
+                      setSelectedId(projects[(selectedIndex - 1 + projects.length) % projects.length].id);
+                    }}
+                    className="w-10 h-10 rounded-xl border border-white/20 text-white/60 backdrop-blur-sm transition-all"
+                    style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
                     whileHover={{
                       y: -2,
-                      backgroundColor: "rgba(255,255,255,0.15)",
-                      borderColor: "rgba(255,255,255,0.4)",
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      borderColor: "rgba(244,63,94,0.6)",
                       color: "#fff",
+                      scale: 1.05,
+                    }}
+                    animate={{
+                      opacity: 1,
                     }}
                   >
                     <ChevronLeft className="w-5 h-5 mx-auto" />
                   </motion.button>
                   <motion.button
-                    onClick={() => setSelectedId(projects[(selectedIndex + 1) % projects.length].id)}
-                    className="w-10 h-10 rounded-xl border border-white/10 text-white/70 transition-colors"
-                    style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                    onClick={() => {
+                      setNavigationDirection("right");
+                      setSelectedId(projects[(selectedIndex + 1) % projects.length].id);
+                    }}
+                    className="w-10 h-10 rounded-xl border border-white/20 text-white/60 backdrop-blur-sm transition-all"
+                    style={{ backgroundColor: "rgba(255,255,255,0.08)" }}
                     whileHover={{
                       y: -2,
-                      backgroundColor: "rgba(255,255,255,0.15)",
-                      borderColor: "rgba(255,255,255,0.4)",
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      borderColor: "rgba(244,63,94,0.6)",
                       color: "#fff",
+                      scale: 1.05,
+                    }}
+                    animate={{
+                      opacity: 1,
                     }}
                   >
                     <ChevronRight className="w-5 h-5 mx-auto" />
@@ -174,7 +209,7 @@ export default function ProjectsPage() {
                 </div>
                 <Link href="/projects/new" passHref>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <PremiumButton className="h-12 px-6 rounded-xl bg-gradient-to-r from-rose-500 to-orange-500 text-white font-medium shadow-lg shadow-rose-500/25">
+                    <PremiumButton className="h-12 px-6 rounded-xl bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-medium shadow-lg shadow-[#ff1e56]/30">
                       <Plus className="w-5 h-5 mr-2" />
                       Yeni Proje
                     </PremiumButton>
@@ -184,21 +219,35 @@ export default function ProjectsPage() {
             </div>
 
             {/* Focus + Deck layout */}
-            <div className="grid grid-cols-1 xl:grid-cols-[0.4fr_2.8fr_0.4fr] gap-6 items-center">
+            <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] gap-0 items-center max-w-[1600px] mx-auto">
               <DeckColumn
                 projects={leftDeck}
                 side="left"
-                onSelect={setSelectedId}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  setNavigationDirection("left");
+                  setSelectedId(id);
+                }}
               />
 
-              <div className="relative z-20">
-                <FocusCard project={focusProject} />
+              <div className="relative z-[100] min-h-[500px] flex items-center justify-center w-full">
+                <AnimatePresence mode="wait">
+                  <FocusCard 
+                    key={focusProject.id} 
+                    project={focusProject} 
+                    direction={navigationDirection}
+                  />
+                </AnimatePresence>
               </div>
 
               <DeckColumn
                 projects={rightDeck}
                 side="right"
-                onSelect={setSelectedId}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  setNavigationDirection("right");
+                  setSelectedId(id);
+                }}
               />
             </div>
 
@@ -237,24 +286,69 @@ export default function ProjectsPage() {
   );
 }
 
-function FocusCard({ project }: { project: Project }) {
+function FocusCard({ project, direction }: { project: Project; direction: "left" | "right" }) {
+  // direction: hangi tuşa basıldı (left = sol ok tuşu, right = sağ ok tuşu)
+  // Sol ok basınca: yeni kart SOLDAN gelir (x: -150), eski kart SAĞA gider (x: 150)
+  // Sağ ok basınca: yeni kart SAĞDAN gelir (x: 150), eski kart SOLA gider (x: -150)
+  const comesFromLeft = direction === "left"; // Sol ok basınca yeni kart soldan gelsin
+  const exitsToRight = direction === "left"; // Sol ok basınca eski kart sağa gider
+  
   return (
-    <Tilt
-      tiltMaxAngleX={6}
-      tiltMaxAngleY={6}
-      scale={1}
-      transitionSpeed={1500}
-      className="w-full max-w-3xl mx-auto"
+    <motion.div
+      key={project.id}
+      className="relative w-full max-w-3xl mx-auto z-[100]"
+      initial={{ 
+        opacity: 0, 
+        scale: 0.9, 
+        x: comesFromLeft ? -150 : 150, 
+        rotateY: comesFromLeft ? -15 : 15 
+      }}
+      animate={{ 
+        opacity: 1, 
+        scale: 1, 
+        x: 0, 
+        rotateY: 0 
+      }}
+      exit={{ 
+        opacity: 0, 
+        scale: 0.8, 
+        x: exitsToRight ? 150 : -150, 
+        rotateY: exitsToRight ? 15 : -15, 
+        zIndex: 10 
+      }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 450, 
+        damping: 30,
+        opacity: { duration: 0.1 },
+      }}
     >
-      <motion.div
-        key={project.id}
-        className="relative w-full rounded-[28px] border border-white/10 bg-gradient-to-br from-[#1f1a1c] via-[#140f12] to-[#0c0b10] backdrop-blur-2xl shadow-[0_40px_160px_rgba(12,0,0,0.35)] p-6 overflow-hidden"
-        initial={{ opacity: 0, y: 40, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 150, damping: 22 }}
+      <Tilt
+        tiltMaxAngleX={6}
+        tiltMaxAngleY={6}
+        scale={1}
+        transitionSpeed={1500}
+        className="w-full"
       >
         <motion.div
-          className="absolute -top-32 -right-10 w-96 h-96 rounded-full bg-rose-500/25 blur-3xl"
+          className="relative w-full rounded-[28px] border border-white/10 bg-gradient-to-br from-[#1f1a1c] via-[#140f12] to-[#0c0b10] backdrop-blur-2xl shadow-[0_40px_160px_rgba(12,0,0,0.35)] p-6 overflow-hidden"
+        >
+        {/* Kırmızı pulse ring */}
+        <motion.div
+          className="absolute -inset-1 rounded-[28px] border-2 border-[#ff1e56]/40 -z-10"
+          animate={{
+            opacity: [0.5, 0.8, 0.5],
+            scale: [1, 1.02, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute -top-32 -right-10 w-96 h-96 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle at center, rgba(255,30,86,0.35), transparent 60%)" }}
           animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.65, 0.4] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
@@ -262,8 +356,13 @@ function FocusCard({ project }: { project: Project }) {
         <div className="relative z-10 space-y-8">
           <div className="flex items-start justify-between gap-6">
             <div className="flex items-start gap-3">
-              <div className="w-14 h-14 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center text-sm font-semibold text-white/90">
-                {project.id.toUpperCase()}
+              <div 
+                className="w-14 h-14 rounded-2xl border border-white/15 bg-white/5 flex items-center justify-center"
+                style={{ 
+                  background: `linear-gradient(135deg, ${project.color}, ${project.color}90)`,
+                }}
+              >
+                <project.icon className="w-7 h-7 text-white" />
               </div>
               <div>
                 <p className="text-sm text-white/50">{project.team}</p>
@@ -288,7 +387,7 @@ function FocusCard({ project }: { project: Project }) {
               </div>
               <div className="mt-3 h-2 rounded-full bg-white/10 overflow-hidden">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-rose-500 via-amber-500 to-orange-400"
+                  className="h-full rounded-full bg-gradient-to-r from-[#ff1e56] via-[#ff1744] to-[#ff006e]"
                   initial={{ width: 0 }}
                   animate={{ width: `${project.progress}%` }}
                   transition={{ type: "spring", stiffness: 140, damping: 22 }}
@@ -300,7 +399,7 @@ function FocusCard({ project }: { project: Project }) {
 
           <div className="flex flex-wrap gap-4">
             <Link href={`/projects/${project.id}/board`} passHref>
-              <PremiumButton className="h-12 px-6 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-semibold shadow-lg shadow-rose-500/30">
+              <PremiumButton className="h-12 px-6 bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-semibold shadow-lg shadow-[#ff1e56]/30">
                 Projeyi Aç
               </PremiumButton>
             </Link>
@@ -316,48 +415,53 @@ function FocusCard({ project }: { project: Project }) {
         </div>
       </motion.div>
     </Tilt>
+    </motion.div>
   );
 }
 
 function DeckColumn({
   projects,
   side,
+  selectedId,
   onSelect,
 }: {
   projects: Project[];
   side: "left" | "right";
+  selectedId: string;
   onSelect: (id: string) => void;
 }) {
   if (!projects.length) {
-    return <div className="hidden xl:flex" />;
+    return <div className="hidden xl:flex w-full justify-center" />;
   }
 
   const ordered = side === "left" ? [...projects].reverse() : projects;
 
   return (
-    <div
-      className={cn("hidden xl:flex", side === "left" ? "justify-end" : "justify-start")}
-      style={{
-        marginRight: side === "left" ? "-80px" : undefined,
-        marginLeft: side === "right" ? "-80px" : undefined,
-      }}
-    >
-      <div className="relative w-[180px] h-[420px] overflow-visible">
-        {ordered.map((project, idx) => {
-          const depth = idx;
-          const xOffset = (depth + 1) * 10 * (side === "left" ? -1 : 1);
-          const yOffset = depth * 14;
-          return (
-            <DeckCard
-              key={project.id}
-              project={project}
-              side={side}
-              style={{ x: xOffset, y: yOffset, zIndex: 10 - depth }}
-              onSelect={onSelect}
-              delay={depth * 0.15}
-            />
-          );
-        })}
+    <div className={cn(
+      "hidden xl:flex w-full items-center relative z-10",
+      side === "left" ? "justify-end" : "justify-start",
+      side === "right" && "-ml-32"
+    )}>
+      <div className="relative w-[200px] h-[500px] overflow-visible">
+        <AnimatePresence>
+          {ordered.map((project, idx) => {
+            const isSelected = project.id === selectedId;
+            const depth = idx;
+            const xOffset = (depth + 1) * 20 * (side === "left" ? -1 : 1);
+            const yOffset = depth * 25;
+            return (
+              <DeckCard
+                key={project.id}
+                project={project}
+                side={side}
+                isSelected={isSelected}
+                style={{ x: xOffset, y: yOffset, zIndex: 20 - depth }}
+                onSelect={onSelect}
+                delay={depth * 0.15}
+              />
+            );
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -367,42 +471,71 @@ function DeckCard({
   project,
   side,
   style,
+  isSelected,
   onSelect,
   delay,
 }: {
   project: Project;
   side: "left" | "right";
   style: { x: number; y: number; zIndex: number };
+  isSelected: boolean;
   onSelect: (id: string) => void;
   delay: number;
 }) {
   const [isHovering, setIsHovering] = React.useState(false);
   const { x, y, zIndex } = style;
-  const hoverY = y - 10;
+  const hoverY = y - 8;
   const baseRotate = side === "left" ? -4 : 4;
 
   return (
-    <motion.button
-      onClick={() => onSelect(project.id)}
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[210px]"
-      style={{ x, y, zIndex: isHovering ? 40 : zIndex, rotate: baseRotate }}
+    <motion.div
+      layout
+      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+      style={{
+        x,
+        y,
+        zIndex: isHovering ? 80 : zIndex,
+      }}
       initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay, type: "spring", stiffness: 150, damping: 20 }}
-      whileHover={{ scale: 1.12, y: hoverY, rotate: 0 }}
-      onHoverStart={() => setIsHovering(true)}
-      onHoverEnd={() => setIsHovering(false)}
-      whileTap={{ scale: 0.98 }}
+      animate={{ 
+        opacity: isSelected ? 0 : (isHovering ? 0.9 : 0.6), 
+        scale: isSelected ? 0.6 : 1,
+        x: isSelected ? (side === "left" ? x - 120 : x + 120) : x,
+        rotate: isSelected ? (side === "left" ? -15 : 15) : baseRotate,
+      }}
+      exit={{ 
+        opacity: 0, 
+        scale: 0.4, 
+        x: side === "left" ? x - 200 : x + 200,
+        rotate: side === "left" ? -25 : 25,
+      }}
+      transition={{ 
+        delay: isSelected ? 0 : delay, 
+        type: "spring", 
+        stiffness: isSelected ? 500 : 300, 
+        damping: isSelected ? 32 : 28,
+        opacity: isSelected ? { duration: 0.08 } : { duration: 0.15 },
+        layout: { type: "spring", stiffness: 300, damping: 25 }
+      }}
     >
-      <Tilt tiltMaxAngleX={6} tiltMaxAngleY={6} scale={1.02} transitionSpeed={1200}>
-        <motion.div
-          className="rounded-2xl border border-white/15 bg-[#1a1416]/80 backdrop-blur-xl p-4 text-left shadow-[0_12px_40px_rgba(5,5,8,0.6)] relative overflow-hidden"
-          animate={{
-            boxShadow: isHovering
-              ? "0 24px 60px rgba(244,63,94,0.35)"
-              : "0 12px 40px rgba(5,5,8,0.6)",
-          }}
-        >
+      <motion.button
+        onClick={() => onSelect(project.id)}
+        className={`w-[180px] ${isSelected ? "pointer-events-none" : ""}`}
+        style={{ rotate: baseRotate }}
+        whileHover={!isSelected ? { y: -8, rotate: baseRotate } : {}}
+        onHoverStart={() => !isSelected && setIsHovering(true)}
+        onHoverEnd={() => setIsHovering(false)}
+        whileTap={{ scale: 0.98 }}
+      >
+      <motion.div
+        className="rounded-2xl border border-white/15 bg-[#1a1416]/80 backdrop-blur-xl p-4 text-left shadow-[0_12px_40px_rgba(5,5,8,0.6)] relative overflow-hidden"
+        animate={{
+          boxShadow: isHovering
+            ? "0 20px 50px rgba(244,63,94,0.25)"
+            : "0 12px 40px rgba(5,5,8,0.6)",
+        }}
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+      >
           <motion.div
             className="absolute inset-0 opacity-0"
             animate={{ opacity: isHovering ? 0.35 : 0 }}
@@ -437,8 +570,8 @@ function DeckCard({
             {project.description}
           </motion.div>
         </motion.div>
-      </Tilt>
-    </motion.button>
+      </motion.button>
+    </motion.div>
   );
 }
 

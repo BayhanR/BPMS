@@ -12,21 +12,28 @@ const config: Config = {
       colors: {
         background: {
           DEFAULT: "#0a0a0a",
-          50: "#111111",
-          100: "#1a1a1a",
+          50: "#0e0e0e",
+          100: "#111111",
+          200: "#151515",
+          300: "#1a1a1a",
+          light: "#ffffff",
         },
         foreground: "#f5f5f5",
         primary: {
           DEFAULT: "#ff1e56",
-          foreground: "#0a0a0a",
-        },
-        secondary: {
-          DEFAULT: "#161616",
-          foreground: "#f5f5f5",
+          foreground: "#080808",
         },
         accent: {
           DEFAULT: "#ff006e",
-          foreground: "#0a0a0a",
+          foreground: "#080808",
+        },
+        highlight: {
+          DEFAULT: "#ff1744",
+          foreground: "#080808",
+        },
+        secondary: {
+          DEFAULT: "#151515",
+          foreground: "#f5f5f5",
         },
         muted: {
           DEFAULT: "#1f1f1f",
@@ -57,7 +64,7 @@ const config: Config = {
         },
         glowPulse: {
           "0%, 100%": { boxShadow: "0 0 20px rgba(255, 30, 86, 0.3)" },
-          "50%": { boxShadow: "0 0 40px rgba(255, 30, 86, 0.6)" },
+          "50%": { boxShadow: "0 0 40px rgba(255, 30, 86, 0.65)" },
         },
       },
       backdropBlur: {

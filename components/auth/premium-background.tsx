@@ -20,11 +20,11 @@ export function PremiumBackground() {
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.3), transparent 50%),
-            radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.3), transparent 50%),
-            radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.3), transparent 50%),
-            radial-gradient(at 0% 100%, rgba(139, 92, 246, 0.3), transparent 50%),
-            linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)
+            radial-gradient(at 0% 0%, rgba(255, 30, 86, 0.35), transparent 55%),
+            radial-gradient(at 100% 0%, rgba(255, 0, 110, 0.3), transparent 50%),
+            radial-gradient(at 100% 100%, rgba(255, 71, 102, 0.25), transparent 55%),
+            radial-gradient(at 0% 100%, rgba(255, 23, 68, 0.25), transparent 50%),
+            linear-gradient(135deg, #080808 0%, #111111 55%, #1a1a1a 100%)
           `,
         }}
       />
@@ -44,7 +44,8 @@ export function PremiumBackground() {
         }}
       />
       <motion.div
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl"
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl"
+        style={{ background: "linear-gradient(145deg, rgba(255,0,110,0.25), rgba(255,30,86,0.2))" }}
         animate={{
           x: [0, -100, 0],
           y: [0, -100, 0],
@@ -58,7 +59,8 @@ export function PremiumBackground() {
         }}
       />
       <motion.div
-        className="absolute top-1/2 right-1/3 w-80 h-80 bg-pink-500/20 rounded-full blur-3xl"
+        className="absolute top-1/2 right-1/3 w-80 h-80 rounded-full blur-3xl"
+        style={{ background: "linear-gradient(145deg, rgba(255,71,102,0.25), rgba(255,23,68,0.2))" }}
         animate={{
           x: [0, 80, 0],
           y: [0, -80, 0],
@@ -90,7 +92,7 @@ export function PremiumBackground() {
             height: particle.size,
             left: `${particle.x}%`,
             top: `${particle.y}%`,
-            boxShadow: `0 0 ${particle.size * 2}px rgba(139, 92, 246, 0.5)`,
+            boxShadow: `0 0 ${particle.size * 2}px rgba(255, 30, 86, 0.5)`,
           }}
           animate={{
             y: [0, -30, 0],
