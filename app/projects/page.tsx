@@ -9,6 +9,7 @@ import { Topbar } from "@/components/topbar";
 import { cn } from "@/lib/utils";
 import { PremiumButton } from "@/components/ui/premium-button";
 import { useSidebarContext } from "@/components/sidebar-context";
+import { useProjectContext } from "@/components/project-context";
 import {
   Plus,
   Workflow,
@@ -18,6 +19,8 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
+  LayoutList,
+  Grid3x3,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -98,14 +101,20 @@ const projects: Project[] = [
 ];
 
 export default function ProjectsPage() {
-  const [selectedId, setSelectedId] = React.useState(projects[0].id);
+  const { selectedProjectId, setSelectedProjectId } = useProjectContext();
+  const [selectedId, setSelectedId] = React.useState(selectedProjectId || projects[0].id);
   const [navigationDirection, setNavigationDirection] = React.useState<"left" | "right">("right");
   const selectedIndex = projects.findIndex((project) => project.id === selectedId);
   const focusProject = projects[selectedIndex];
+
+  // Context'i güncelle
+  React.useEffect(() => {
+    setSelectedProjectId(selectedId);
+  }, [selectedId, setSelectedProjectId]);
   const [viewMode, setViewMode] = React.useState<"spatial" | "classic">("spatial");
-  const viewOptions: Array<{ label: string; value: "spatial" | "classic" }> = [
-    { label: "Spatial Deck", value: "spatial" },
-    { label: "Klasik Liste", value: "classic" },
+  const viewOptions: Array< { label: string; value: "spatial" | "classic"; icon: React.ReactNode }> = [
+    { label: "Deck", value: "spatial", icon: <Grid3x3 className="w-4 h-4" /> },
+    { label: "List", value: "classic", icon: <LayoutList className="w-4 h-4" /> },
   ];
   const { sidebarWidth } = useSidebarContext();
   const contentStyle = React.useMemo(
@@ -179,7 +188,7 @@ export default function ProjectsPage() {
                         key={option.value}
                         onClick={() => setViewMode(option.value)}
                         className={cn(
-                          "relative px-4 py-2 rounded-full font-medium transition-colors",
+                          "relative px-4 py-2 rounded-full font-medium transition-colors flex items-center gap-2",
                           viewMode === option.value ? "text-white" : "text-white/50"
                         )}
                       >
@@ -190,6 +199,7 @@ export default function ProjectsPage() {
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
                           />
                         )}
+                        <span className="relative z-10">{option.icon}</span>
                         <span className="relative z-10">{option.label}</span>
                       </button>
                     ))}
@@ -319,6 +329,57 @@ export default function ProjectsPage() {
               />
             )}
           </motion.div>
+
+          {/* Sabit "Projeyi Aç" Butonu - Sadece klasik modda ve seçili proje varsa */}
+          {viewMode === "classic" && selectedId && (
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, scale: 0, y: 50 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0, y: 50 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                className="fixed bottom-8 right-8 z-50"
+              >
+                <Link href={`/projects/${selectedId}/board`} passHref>
+                  <motion.button
+                    className="relative w-16 h-16 rounded-full bg-gradient-to-r from-[#ff1e56] to-[#ff006e] shadow-[0_8px_32px_rgba(255,30,86,0.5)] flex items-center justify-center text-white"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {/* Pulse ring */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full border-2 border-[#ff1e56]"
+                      animate={{
+                        opacity: [0.6, 1, 0.6],
+                        scale: [1, 1.3, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                    
+                    {/* Glow */}
+                    <motion.div
+                      className="absolute inset-0 rounded-full bg-[#ff1e56] blur-xl"
+                      animate={{
+                        opacity: [0.5, 0.8, 0.5],
+                        scale: [1, 1.2, 1],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                    
+                    <Plus className="w-8 h-8 relative z-10" />
+                  </motion.button>
+                </Link>
+              </motion.div>
+            </AnimatePresence>
+          )}
         </main>
       </div>
     </div>
@@ -533,7 +594,6 @@ function DeckCard({
 
   return (
     <motion.div
-      layout
       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
       style={{
         x,
@@ -542,44 +602,46 @@ function DeckCard({
       }}
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{
-        opacity: isHovering ? 0.95 : 0.7,
+        opacity: 0.75,
         scale: 1,
         rotate: baseRotate,
       }}
       transition={{
         delay,
         type: "spring",
-        stiffness: 320,
-        damping: 30,
-        opacity: { duration: 0.2 },
+        stiffness: 300,
+        damping: 25,
       }}
     >
       <motion.button
         onClick={() => onSelect(project.id)}
-        className="group w-[190px] origin-center"
-        style={{ rotate: baseRotate }}
-        whileHover={{ y: -12, scale: 1.04 }}
+        className="group w-[190px] rounded-2xl border border-white/15 bg-[#1a1416]/85 backdrop-blur-xl p-4 text-left shadow-[0_12px_40px_rgba(5,5,8,0.55)] relative overflow-hidden"
         onHoverStart={onHoverStart}
         onHoverEnd={onHoverEnd}
-        whileTap={{ scale: 0.97 }}
+        whileHover={{
+          scale: 1.08,
+        }}
+        whileTap={{ scale: 0.98 }}
+        transition={{
+          type: "spring",
+          stiffness: 400,
+          damping: 25,
+        }}
       >
+        {/* Gradient overlay - sadece hover'da görünsün */}
         <motion.div
-          className="rounded-2xl border border-white/15 bg-[#1a1416]/85 backdrop-blur-xl p-4 text-left shadow-[0_12px_40px_rgba(5,5,8,0.55)] relative overflow-hidden"
-          animate={{
-            boxShadow: isHovering
-              ? "0 30px 70px rgba(255,30,86,0.35)"
-              : "0 12px 40px rgba(5,5,8,0.55)",
+          className="absolute inset-0 rounded-2xl pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovering ? 0.4 : 0 }}
+          transition={{ duration: 0.2 }}
+          style={{
+            background: `linear-gradient(135deg, ${project.color}, rgba(255,255,255,0.1))`,
           }}
-          transition={{ type: "spring", stiffness: 220, damping: 22 }}
-        >
-          <motion.div
-            className="absolute inset-[1px] rounded-[18px]"
-            animate={{ opacity: isHovering ? 0.4 : 0 }}
-            style={{
-              background: `linear-gradient(135deg, ${project.color}, rgba(255,255,255,0.08))`,
-            }}
-          />
-          <div className="flex items-center gap-3 relative z-10">
+        />
+        
+        {/* İçerik */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
               style={{ background: `linear-gradient(135deg, ${project.color}, ${project.color}90)` }}
@@ -591,14 +653,22 @@ function DeckCard({
               <p className="text-xs text-white/60">{project.taskCount} tasks</p>
             </div>
           </div>
-          <div className="mt-3 flex items-center justify-between text-xs text-white/60 relative z-10">
+          <div className="mt-3 flex items-center justify-between text-xs text-white/60">
             <span>{project.status}</span>
             <span className="text-white/80">{project.progress}%</span>
           </div>
-          <div className="mt-3 text-[11px] text-white/70 leading-snug relative z-10 opacity-0 max-h-0 group-hover:opacity-100 group-hover:max-h-24 transition-all duration-300 ease-out">
+          <motion.div
+            className="mt-3 text-[11px] text-white/70 leading-snug overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{
+              height: isHovering ? "auto" : 0,
+              opacity: isHovering ? 1 : 0,
+            }}
+            transition={{ duration: 0.2 }}
+          >
             {project.description}
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </motion.button>
     </motion.div>
   );
@@ -623,57 +693,188 @@ function SimpleProjectGrid({
   selectedId: string;
   onSelect: (id: string) => void;
 }) {
+  const selectedProject = projects.find((p) => p.id === selectedId);
+  const otherProjects = projects.filter((p) => p.id !== selectedId);
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-      {projects.map((project) => {
-        const Icon = project.icon;
-        const isActive = project.id === selectedId;
-        return (
-          <motion.article
-            key={project.id}
-            onClick={() => onSelect(project.id)}
-            className={cn(
-              "relative rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-2xl overflow-hidden cursor-pointer transition-all",
-              isActive && "border-[#ff1e56]/60 bg-white/10 shadow-[0_25px_80px_rgba(255,30,86,0.25)]"
-            )}
-            whileHover={{ y: -8, scale: 1.01 }}
+    <div className="space-y-8">
+      {/* Seçili proje - büyük kart */}
+      <AnimatePresence mode="wait">
+        {selectedProject && (
+          <motion.div
+            key={selectedProject.id}
+            initial={{ opacity: 0, y: -10, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 500, 
+              damping: 35,
+            }}
+            className="w-full"
           >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-white"
-                  style={{ background: `linear-gradient(135deg, ${project.color}, ${project.color}90)` }}
+            <motion.article
+              onClick={() => onSelect(selectedProject.id)}
+              className="relative w-full rounded-[32px] border-2 border-[#ff1e56]/60 bg-white/10 p-8 backdrop-blur-2xl overflow-hidden cursor-pointer"
+              animate={{
+                scale: 1.015,
+                y: -12,
+                boxShadow: "0 32px 80px rgba(255,30,86,0.35)",
+              }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            >
+              {/* Kırmızı pulse ring */}
+              <motion.div
+                className="absolute -inset-3 rounded-[36px] border-3 border-[#ff1e56]/70 -z-10"
+                animate={{
+                  opacity: [0.6, 1, 0.6],
+                  scale: [1, 1.05, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+              
+              {/* Güçlü kırmızı glow efekti */}
+              <motion.div
+                className="absolute -inset-4 rounded-[32px] bg-gradient-to-r from-[#ff1e56]/40 to-[#ff006e]/40 blur-2xl -z-20"
+                animate={{
+                  opacity: [0.6, 1, 0.6],
+                  scale: [1, 1.08, 1],
+                }}
+                transition={{
+                  duration: 2.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+
+              <div className="relative z-10">
+                <div className="flex items-start justify-between gap-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-16 h-16 rounded-2xl flex items-center justify-center text-white flex-shrink-0"
+                      style={{ background: `linear-gradient(135deg, ${selectedProject.color}, ${selectedProject.color}90)` }}
+                    >
+                      <selectedProject.icon className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <p className="text-sm uppercase tracking-[0.2em] text-white/50 mb-1">{selectedProject.team}</p>
+                      <h3 className="text-3xl font-bold text-white mb-2">{selectedProject.name}</h3>
+                      <p className="text-base text-white/70 max-w-2xl leading-relaxed">{selectedProject.description}</p>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="px-4 py-2 rounded-full bg-white/10 border border-white/20 text-sm uppercase tracking-widest text-white/80 mb-2 inline-block">
+                      {selectedProject.status}
+                    </span>
+                    <p className="text-sm text-white/50">Teslim: {selectedProject.deadline}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-white/60 mb-1">Görevler</p>
+                    <p className="text-2xl font-bold text-white">{selectedProject.taskCount}</p>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-white/60 mb-1">İlerleme</p>
+                    <p className="text-2xl font-bold text-white">{selectedProject.progress}%</p>
+                    <div className="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-[#ff1e56] via-[#ff1744] to-[#ff006e]"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${selectedProject.progress}%` }}
+                        transition={{ type: "spring", stiffness: 140, damping: 22 }}
+                      />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                    <p className="text-sm text-white/60 mb-1">Öncelik</p>
+                    <p className="text-2xl font-bold text-white">Yüksek</p>
+                  </div>
+                </div>
+
+              </div>
+            </motion.article>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Diğer projeler - grid */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <AnimatePresence>
+          {otherProjects.map((project, index) => {
+            const Icon = project.icon;
+            return (
+              <motion.div
+                key={project.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ 
+                  opacity: selectedId === project.id ? 1 : 0.5,
+                  scale: selectedId === project.id ? 1 : 0.98,
+                }}
+                exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                transition={{
+                  layout: { type: "spring", stiffness: 350, damping: 30 },
+                  opacity: { duration: 0.3 },
+                  scale: { duration: 0.3 }
+                }}
+                className="relative"
+              >
+                <motion.article
+                  layout="position"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onSelect(project.id);
+                  }}
+                  className="relative rounded-[28px] border border-white/10 bg-white/5 p-5 backdrop-blur-2xl overflow-hidden cursor-pointer h-full"
+                  whileHover={{ y: -6, scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 >
-                  <Icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-lg font-semibold text-white">{project.name}</p>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">{project.team}</p>
-                </div>
-              </div>
-              <span className="text-sm font-semibold text-white/70">{project.progress}%</span>
-            </div>
-            <p className="mt-3 text-sm text-white/65 line-clamp-3">{project.description}</p>
-            <div className="mt-4 flex items-center gap-3 text-xs text-white/60 flex-wrap">
-              <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5">{project.status}</span>
-              <span className="px-3 py-1 rounded-full border border-white/10">
-                {project.taskCount} görev
-              </span>
-              <span className="px-3 py-1 rounded-full border border-white/10">Teslim {project.deadline}</span>
-            </div>
-            <div className="mt-4">
-              <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-[#ff1e56] via-[#ff1744] to-[#ff006e]"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${project.progress}%` }}
-                  transition={{ type: "spring", stiffness: 140, damping: 22 }}
-                />
-              </div>
-            </div>
-          </motion.article>
-        );
-      })}
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center text-white"
+                        style={{ background: `linear-gradient(135deg, ${project.color}, ${project.color}90)` }}
+                      >
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-semibold text-white">{project.name}</p>
+                        <p className="text-xs uppercase tracking-[0.3em] text-white/50">{project.team}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-white/70">{project.progress}%</span>
+                  </div>
+                  <p className="mt-3 text-sm text-white/65 line-clamp-3">{project.description}</p>
+                  <div className="mt-4 flex items-center gap-3 text-xs text-white/60 flex-wrap">
+                    <span className="px-3 py-1 rounded-full border border-white/15 bg-white/5">{project.status}</span>
+                    <span className="px-3 py-1 rounded-full border border-white/10">
+                      {project.taskCount} görev
+                    </span>
+                    <span className="px-3 py-1 rounded-full border border-white/10">Teslim {project.deadline}</span>
+                  </div>
+                  <div className="mt-4">
+                    <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-[#ff1e56] via-[#ff1744] to-[#ff006e]"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${project.progress}%` }}
+                        transition={{ type: "spring", stiffness: 140, damping: 22 }}
+                      />
+                    </div>
+                  </div>
+                </motion.article>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
