@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ThemeProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
 import Lenis from "lenis";
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -27,14 +28,16 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      disableTransitionOnChange
-    >
-      {children}
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem={false}
+        disableTransitionOnChange
+      >
+        {children}
+      </ThemeProvider>
+    </SessionProvider>
   );
 }
 

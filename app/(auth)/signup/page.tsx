@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PremiumBackground } from "@/components/auth/premium-background";
 import { PremiumInput } from "@/components/auth/premium-input";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -18,27 +19,76 @@ export default function SignUpPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError("");
+
     if (password !== confirmPassword) {
-      alert("Şifreler eşleşmiyor!");
+      setError("Şifreler eşleşmiyor!");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Şifre en az 6 karakter olmalıdır!");
       return;
     }
 
     setIsLoading(true);
 
-    // Mock registration - replace with real auth
-    setTimeout(() => {
+    try {
+      // Create user
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Bir hata oluştu");
+        setIsLoading(false);
+        return;
+      }
+
+      // Auto sign in after signup
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        setIsLoading(false);
+        setIsTransitioning(true);
+        
+        // Blur out animation
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 500);
+      } else {
+        setError("Hesap oluşturuldu ancak giriş yapılamadı. Lütfen giriş sayfasından deneyin.");
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error("[SIGNUP] Error:", error);
+      setError("Bir hata oluştu");
       setIsLoading(false);
-      setIsTransitioning(true);
-      
-      // Blur out animation
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
-    }, 1000);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch (error) {
+      console.error("[GOOGLE SIGNUP] Error:", error);
+      setError("Google ile kayıt olurken bir hata oluştu");
+    }
   };
 
   return (
@@ -163,6 +213,17 @@ export default function SignUpPage() {
                         required
                       />
 
+                      {/* Error Message */}
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
                       {/* Submit Button */}
                       <motion.div
                         whileHover={{ scale: 1.02 }}
@@ -207,6 +268,7 @@ export default function SignUpPage() {
                         <Button
                           type="button"
                           variant="outline"
+                          onClick={handleGoogleSignIn}
                           className="w-full h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 transition-all relative overflow-hidden group"
                           style={{
                             boxShadow: "0 4px 16px rgba(255, 255, 255, 0.1)",

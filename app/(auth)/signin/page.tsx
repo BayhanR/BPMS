@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PremiumBackground } from "@/components/auth/premium-background";
 import { PremiumInput } from "@/components/auth/premium-input";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -16,21 +17,50 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     setIsLoading(true);
 
-    // Mock authentication - replace with real auth
-    setTimeout(() => {
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Email veya şifre hatalı");
+        setIsLoading(false);
+        return;
+      }
+
+      if (result?.ok) {
+        setIsLoading(false);
+        setIsTransitioning(true);
+        
+        // Blur out animation
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 500);
+      }
+    } catch (error) {
+      console.error("[SIGNIN] Error:", error);
+      setError("Bir hata oluştu");
       setIsLoading(false);
-      setIsTransitioning(true);
-      
-      // Blur out animation
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 500);
-    }, 1000);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch (error) {
+      console.error("[GOOGLE SIGNIN] Error:", error);
+      setError("Google ile giriş yapılırken bir hata oluştu");
+    }
   };
 
   return (
@@ -133,6 +163,17 @@ export default function SignInPage() {
                         required
                       />
 
+                      {/* Error Message */}
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3 rounded-lg bg-red-500/20 border border-red-500/50 text-red-200 text-sm"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
                       {/* Submit Button */}
                       <motion.div
                         whileHover={{ scale: 1.02 }}
@@ -176,6 +217,7 @@ export default function SignInPage() {
                         <Button
                           type="button"
                           variant="outline"
+                          onClick={handleGoogleSignIn}
                           className="w-full h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 transition-all relative overflow-hidden group"
                           style={{
                             boxShadow: "0 4px 16px rgba(255, 255, 255, 0.1)",
