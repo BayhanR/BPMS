@@ -9,6 +9,7 @@ interface FloatingGlassCardProps {
   className?: string;
   hoverScale?: number;
   glowIntensity?: number;
+  onClick?: () => void;
 }
 
 export function FloatingGlassCard({
@@ -16,6 +17,7 @@ export function FloatingGlassCard({
   className,
   hoverScale = 1.05,
   glowIntensity = 0.5,
+  onClick,
 }: FloatingGlassCardProps) {
   return (
     <motion.div
@@ -23,8 +25,10 @@ export function FloatingGlassCard({
         "relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl",
         "shadow-[0_8px_32px_0_rgba(255,30,86,0.12)]",
         "transition-all duration-300 ease-out",
+        onClick && "cursor-pointer",
         className
       )}
+      onClick={onClick}
       whileHover={{
         scale: hoverScale,
         y: -4,

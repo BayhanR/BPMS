@@ -42,11 +42,12 @@ interface TaskDetailModalProps {
     assignees: Array<{ id: string; name: string; avatar?: string }>;
     labels: Array<{ id: string; name: string; color: string }>;
     dueDate?: string;
-    priority?: "low" | "medium" | "high";
+    priority?: "low" | "medium" | "high" | "urgent";
   };
   subtasks?: Subtask[];
   comments?: Comment[];
   attachments?: Attachment[];
+  onUpdate?: () => void;
 }
 
 export function TaskDetailModal({
@@ -56,6 +57,7 @@ export function TaskDetailModal({
   subtasks = [],
   comments = [],
   attachments = [],
+  onUpdate,
 }: TaskDetailModalProps) {
   const [newSubtask, setNewSubtask] = React.useState("");
   const [newComment, setNewComment] = React.useState("");

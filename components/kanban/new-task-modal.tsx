@@ -3,9 +3,16 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Calendar, Users, Tag, Image as ImageIcon } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+interface Member {
+  id: string;
+  name: string | null;
+  email: string;
+  avatarUrl: string | null;
+}
 
 interface NewTaskModalProps {
   open: boolean;
@@ -14,11 +21,12 @@ interface NewTaskModalProps {
   onSubmit: (task: {
     title: string;
     description?: string;
-    assignees: string[];
-    labels: string[];
+    assigneeId?: string;
     dueDate?: string;
-    coverImage?: string;
+    priority?: string;
   }) => void;
+  members?: Member[];
+  projectId?: string;
 }
 
 export function NewTaskModal({
@@ -26,27 +34,30 @@ export function NewTaskModal({
   onOpenChange,
   columnId,
   onSubmit,
+  members = [],
+  projectId,
 }: NewTaskModalProps) {
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [dueDate, setDueDate] = React.useState("");
-  const [coverImage, setCoverImage] = React.useState("");
+  const [assigneeId, setAssigneeId] = React.useState("");
+  const [priority, setPriority] = React.useState("medium");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit({
       title,
-      description,
-      assignees: [],
-      labels: [],
-      dueDate,
-      coverImage,
+      description: description || undefined,
+      assigneeId: assigneeId || undefined,
+      dueDate: dueDate || undefined,
+      priority,
     });
     // Reset form
     setTitle("");
     setDescription("");
     setDueDate("");
-    setCoverImage("");
+    setAssigneeId("");
+    setPriority("medium");
     onOpenChange(false);
   };
 
@@ -153,6 +164,42 @@ export function NewTaskModal({
                           />
                         </div>
 
+                        {/* Assignee */}
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-2">
+                            Atanan Kişi (Opsiyonel)
+                          </label>
+                          <select
+                            value={assigneeId}
+                            onChange={(e) => setAssigneeId(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                          >
+                            <option value="" className="bg-[#1a1a1a]">Kimse seçilmedi</option>
+                            {members.map((member) => (
+                              <option key={member.id} value={member.id} className="bg-[#1a1a1a]">
+                                {member.name || member.email}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Priority */}
+                        <div>
+                          <label className="block text-sm font-medium text-white/70 mb-2">
+                            Öncelik
+                          </label>
+                          <select
+                            value={priority}
+                            onChange={(e) => setPriority(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
+                          >
+                            <option value="low" className="bg-[#1a1a1a]">Düşük</option>
+                            <option value="medium" className="bg-[#1a1a1a]">Orta</option>
+                            <option value="high" className="bg-[#1a1a1a]">Yüksek</option>
+                            <option value="urgent" className="bg-[#1a1a1a]">Acil</option>
+                          </select>
+                        </div>
+
                         {/* Due Date */}
                         <div>
                           <label className="block text-sm font-medium text-white/70 mb-2">
@@ -163,20 +210,6 @@ export function NewTaskModal({
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                          />
-                        </div>
-
-                        {/* Cover Image */}
-                        <div>
-                          <label className="block text-sm font-medium text-white/70 mb-2">
-                            Kapak Görseli URL (Opsiyonel)
-                          </label>
-                          <input
-                            type="url"
-                            value={coverImage}
-                            onChange={(e) => setCoverImage(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-                            placeholder="https://example.com/image.jpg"
                           />
                         </div>
 

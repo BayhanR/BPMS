@@ -22,7 +22,7 @@ interface KanbanColumnProps {
     assignees: Array<{ id: string; name: string; avatar: string }>;
     labels: Array<{ id: string; name: string; color: string }>;
     dueDate?: string;
-    priority?: "low" | "medium" | "high";
+    priority?: "low" | "medium" | "high" | "urgent";
   }>;
   onAddTask?: (columnId: string) => void;
   onTaskClick?: (task: any) => void;
