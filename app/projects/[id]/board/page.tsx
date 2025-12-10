@@ -17,27 +17,55 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+import useSWR from "swr";
 import { KanbanColumn } from "@/components/kanban/kanban-column";
 import { TaskCard } from "@/components/kanban/task-card";
 import { NewTaskModal } from "@/components/kanban/new-task-modal";
 import { TaskDetailModal } from "@/components/kanban/task-detail-modal";
-import { Plus, Sparkles } from "lucide-react";
-import { useParams } from "next/navigation";
-import { io, Socket } from "socket.io-client";
+import { Plus, Loader2, AlertCircle } from "lucide-react";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { cn } from "@/lib/utils";
 import { useSidebarContext } from "@/components/sidebar-context";
+import { useAppStore } from "@/lib/store";
+import { usePermissions } from "@/hooks/use-permissions";
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface Task {
   id: string;
   title: string;
   description?: string;
   coverImage?: string;
-  assignees: Array<{ id: string; name: string; avatar: string }>;
-  labels: Array<{ id: string; name: string; color: string }>;
+  status: "todo" | "doing" | "done";
+  priority: "low" | "medium" | "high" | "urgent";
+  order: number;
   dueDate?: string;
-  priority?: "low" | "medium" | "high";
+  assignee?: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatarUrl: string | null;
+  };
+  labels: Array<{
+    label: {
+      id: string;
+      name: string;
+      color: string;
+    };
+  }>;
+  project: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  subtasks?: Array<{
+    id: string;
+    title: string;
+    completed: boolean;
+  }>;
 }
 
 interface Column {
@@ -48,134 +76,65 @@ interface Column {
 
 export default function KanbanBoardPage() {
   const params = useParams();
+  const router = useRouter();
   const projectId = params.id as string;
-  const [socket, setSocket] = React.useState<Socket | null>(null);
+  const { data: session, status: sessionStatus } = useSession();
+  const { currentWorkspaceId, setProject } = useAppStore();
+  const { canCreateTask, canEditTask } = usePermissions();
+  const { sidebarWidth } = useSidebarContext();
+
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [targetColumn, setTargetColumn] = React.useState<string | null>(null);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isTaskDetailOpen, setIsTaskDetailOpen] = React.useState(false);
 
-  // Socket.io setup (ready for integration)
+  // Tasks API çağrısı
+  const { data: tasks, error, isLoading, mutate } = useSWR<Task[]>(
+    projectId ? `/api/tasks?projectId=${projectId}` : null,
+    fetcher
+  );
+
+  // Workspace members (assignee dropdown için)
+  const { data: members } = useSWR(
+    currentWorkspaceId ? `/api/users?workspaceId=${currentWorkspaceId}` : null,
+    fetcher
+  );
+
+  // Project ID'yi store'a kaydet
   React.useEffect(() => {
-    // In production, use actual server URL
-    // const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3001");
-    // setSocket(newSocket);
-
-    // Mock socket for now
-    // return () => {
-    //   newSocket.close();
-    // };
-  }, [projectId]);
-
-  // Emit task moved event
-  const emitTaskMoved = (taskId: string, fromColumnId: string, toColumnId: string, newIndex: number) => {
-    if (socket) {
-      socket.emit("task-moved", {
-        projectId,
-        taskId,
-        fromColumnId,
-        toColumnId,
-        newIndex,
-      });
+    if (projectId) {
+      setProject(projectId);
     }
-  };
+  }, [projectId, setProject]);
 
-  const [columns, setColumns] = React.useState<Column[]>([
-    {
-      id: "todo",
-      title: "To Do",
-      tasks: [
-        {
-          id: "task-1",
-          title: "Design new dashboard layout",
-          description: "Create wireframes and mockups for the new dashboard",
-          assignees: [
-            { id: "1", name: "John Doe", avatar: "" },
-            { id: "2", name: "Jane Smith", avatar: "" },
-          ],
-          labels: [
-            { id: "design", name: "Design", color: "#8b5cf6" },
-            { id: "ui", name: "UI/UX", color: "#ec4899" },
-          ],
-          dueDate: "2024-12-15",
-          priority: "high",
-        },
-        {
-          id: "task-2",
-          title: "Implement authentication",
-          description: "Set up user authentication and authorization",
-          coverImage: "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=400",
-          assignees: [{ id: "3", name: "Mike Johnson", avatar: "" }],
-          labels: [{ id: "backend", name: "Backend", color: "#06b6d4" }],
-          dueDate: "2024-12-20",
-          priority: "medium",
-        },
-      ],
-    },
-    {
-      id: "in-progress",
-      title: "In Progress",
-      tasks: [
-        {
-          id: "task-3",
-          title: "Fix responsive issues",
-          description: "Fix mobile responsive problems on dashboard",
-          assignees: [
-            { id: "1", name: "John Doe", avatar: "" },
-            { id: "4", name: "Sarah Wilson", avatar: "" },
-          ],
-          labels: [
-            { id: "frontend", name: "Frontend", color: "#10b981" },
-            { id: "bug", name: "Bug", color: "#ef4444" },
-          ],
-          dueDate: "2024-12-10",
-          priority: "high",
-        },
-        {
-          id: "task-4",
-          title: "Write API documentation",
-          description: "Document all API endpoints and methods",
-          assignees: [{ id: "2", name: "Jane Smith", avatar: "" }],
-          labels: [{ id: "documentation", name: "Documentation", color: "#f59e0b" }],
-          priority: "low",
-        },
-      ],
-    },
-    {
-      id: "review",
-      title: "Review",
-      tasks: [
-        {
-          id: "task-5",
-          title: "Code review for PR #123",
-          description: "Review the pull request for new features",
-          assignees: [{ id: "3", name: "Mike Johnson", avatar: "" }],
-          labels: [{ id: "review", name: "Review", color: "#6366f1" }],
-          dueDate: "2024-12-08",
-          priority: "medium",
-        },
-      ],
-    },
-    {
-      id: "done",
-      title: "Done",
-      tasks: [
-        {
-          id: "task-6",
-          title: "Setup CI/CD pipeline",
-          description: "Configure continuous integration and deployment",
-          assignees: [
-            { id: "4", name: "Sarah Wilson", avatar: "" },
-            { id: "5", name: "Tom Brown", avatar: "" },
-          ],
-          labels: [{ id: "devops", name: "DevOps", color: "#14b8a6" }],
-          dueDate: "2024-12-05",
-          priority: "high",
-        },
-      ],
-    },
-  ]);
+  // Task'ları column'lara göre grupla
+  const columns = React.useMemo<Column[]>(() => {
+    if (!tasks) return [];
+
+    const grouped: Record<string, Task[]> = {
+      todo: [],
+      doing: [],
+      done: [],
+    };
+
+    tasks.forEach((task) => {
+      if (grouped[task.status]) {
+        grouped[task.status].push(task);
+      }
+    });
+
+    // Her column'u order'a göre sırala
+    Object.keys(grouped).forEach((status) => {
+      grouped[status].sort((a, b) => a.order - b.order);
+    });
+
+    return [
+      { id: "todo", title: "Yapılacak", tasks: grouped.todo },
+      { id: "doing", title: "Devam Ediyor", tasks: grouped.doing },
+      { id: "done", title: "Tamamlandı", tasks: grouped.done },
+    ];
+  }, [tasks]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -189,11 +148,11 @@ export default function KanbanBoardPage() {
     setActiveId(event.active.id as string);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
 
-    if (!over) return;
+    if (!over || !canEditTask) return;
 
     const activeId = active.id as string;
     const overId = over.id as string;
@@ -208,47 +167,37 @@ export default function KanbanBoardPage() {
 
     if (!activeColumn || !overColumn) return;
 
-    const activeTaskIndex = activeColumn.tasks.findIndex((task) => task.id === activeId);
-    const activeTask = activeColumn.tasks[activeTaskIndex];
+    const activeTask = activeColumn.tasks.find((task) => task.id === activeId);
+    if (!activeTask) return;
 
-    // If dropped on a task, insert before that task
-    // If dropped on a column, append to the end
-    let newIndex: number;
-    if (overColumn.tasks.some((task) => task.id === overId)) {
-      newIndex = overColumn.tasks.findIndex((task) => task.id === overId);
-    } else {
-      newIndex = overColumn.tasks.length;
-    }
+    // Hedef column'un status değeri
+    const newStatus = overColumn.id as "todo" | "doing" | "done";
 
-    // Move task
-    if (activeColumn.id === overColumn.id) {
-      // Same column - reorder
-      const newTasks = arrayMove(activeColumn.tasks, activeTaskIndex, newIndex);
-      setColumns((cols) =>
-        cols.map((col) =>
-          col.id === activeColumn.id ? { ...col, tasks: newTasks } : col
-        )
-      );
-    } else {
-      // Different column - move
-      const newActiveTasks = activeColumn.tasks.filter((task) => task.id !== activeId);
-      const newOverTasks = [...overColumn.tasks];
-      newOverTasks.splice(newIndex, 0, activeTask);
+    // Status veya sıralama değiştiyse API'ye gönder
+    if (activeColumn.id !== overColumn.id || activeTask.status !== newStatus) {
+      try {
+        // Optimistic update
+        mutate(
+          (currentTasks) =>
+            currentTasks?.map((t) =>
+              t.id === activeId ? { ...t, status: newStatus } : t
+            ),
+          false
+        );
 
-      setColumns((cols) =>
-        cols.map((col) => {
-          if (col.id === activeColumn.id) {
-            return { ...col, tasks: newActiveTasks };
-          }
-          if (col.id === overColumn.id) {
-            return { ...col, tasks: newOverTasks };
-          }
-          return col;
-        })
-      );
+        // API çağrısı
+        await fetch(`/api/tasks/${activeId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }),
+        });
 
-      // Emit socket event
-      emitTaskMoved(activeId, activeColumn.id, overColumn.id, newIndex);
+        // Veriyi yeniden çek
+        mutate();
+      } catch (error) {
+        console.error("Status update error:", error);
+        mutate(); // Hata durumunda eski veriye dön
+      }
     }
   };
 
@@ -257,42 +206,37 @@ export default function KanbanBoardPage() {
     setIsModalOpen(true);
   };
 
-  const handleTaskSubmit = (taskData: {
+  const handleTaskSubmit = async (taskData: {
     title: string;
     description?: string;
-    assignees: string[];
-    labels: string[];
+    assigneeId?: string;
     dueDate?: string;
-    coverImage?: string;
+    priority?: string;
   }) => {
     if (!targetColumn) return;
 
-    const newTask: Task = {
-      id: `task-${Date.now()}`,
-      title: taskData.title,
-      description: taskData.description,
-      coverImage: taskData.coverImage,
-      assignees: [],
-      labels: [],
-      dueDate: taskData.dueDate,
-      priority: "medium",
-    };
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...taskData,
+          projectId,
+          status: targetColumn,
+        }),
+      });
 
-    setColumns((cols) =>
-      cols.map((col) =>
-        col.id === targetColumn
-          ? { ...col, tasks: [...col.tasks, newTask] }
-          : col
-      )
-    );
+      if (res.ok) {
+        mutate(); // Listeyi yenile
+        setIsModalOpen(false);
+      }
+    } catch (error) {
+      console.error("Task create error:", error);
+    }
   };
 
-  const activeTask = columns
-    .flatMap((col) => col.tasks)
-    .find((task) => task.id === activeId);
+  const activeTask = tasks?.find((task) => task.id === activeId);
 
-  const columnIds = columns.map((col) => col.id);
-  const { sidebarWidth } = useSidebarContext();
   const contentStyle = React.useMemo(
     () => ({
       paddingLeft: sidebarWidth,
@@ -300,6 +244,25 @@ export default function KanbanBoardPage() {
     }),
     [sidebarWidth]
   );
+
+  if (sessionStatus === "loading" || isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+          <AlertCircle className="w-5 h-5" />
+          <span>Görevler yüklenirken bir hata oluştu.</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -312,14 +275,12 @@ export default function KanbanBoardPage() {
             className="mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 150,
-              damping: 20,
-            }}
+            transition={{ type: "spring", stiffness: 150, damping: 20 }}
           >
             <h1 className="text-3xl font-bold text-white mb-2">Kanban Board</h1>
-            <p className="text-white/60">Drag and drop tasks to organize your workflow</p>
+            <p className="text-white/60">
+              {tasks?.length || 0} görev · Sürükle bırak ile durumları değiştir
+            </p>
           </motion.div>
 
           {/* Board */}
@@ -330,18 +291,40 @@ export default function KanbanBoardPage() {
               onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext items={columnIds} strategy={horizontalListSortingStrategy}>
+              <SortableContext
+                items={columns.map((c) => c.id)}
+                strategy={horizontalListSortingStrategy}
+              >
                 <div className="flex gap-4 h-full min-h-[600px] md:flex-row flex-col">
                   {columns.map((column) => (
                     <KanbanColumn
                       key={column.id}
                       id={column.id}
                       title={column.title}
-                      tasks={column.tasks}
-                      onAddTask={handleAddTask}
+                      tasks={column.tasks.map((task) => ({
+                        id: task.id,
+                        title: task.title,
+                        description: task.description,
+                        assignees: task.assignee
+                          ? [
+                              {
+                                id: task.assignee.id,
+                                name: task.assignee.name || task.assignee.email,
+                                avatar: task.assignee.avatarUrl || "",
+                              },
+                            ]
+                          : [],
+                        labels: task.labels.map((l) => l.label),
+                        dueDate: task.dueDate,
+                        priority: task.priority,
+                      }))}
+                      onAddTask={canCreateTask ? handleAddTask : undefined}
                       onTaskClick={(task) => {
-                        setSelectedTask(task);
-                        setIsTaskDetailOpen(true);
+                        const fullTask = tasks?.find((t) => t.id === task.id);
+                        if (fullTask) {
+                          setSelectedTask(fullTask);
+                          setIsTaskDetailOpen(true);
+                        }
                       }}
                     />
                   ))}
@@ -355,16 +338,31 @@ export default function KanbanBoardPage() {
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1.1 }}
                     exit={{ opacity: 0 }}
-                    style={{
-                      width: 320,
-                    }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 150,
-                      damping: 20,
-                    }}
+                    style={{ width: 320 }}
+                    transition={{ type: "spring", stiffness: 150, damping: 20 }}
                   >
-                    <TaskCard task={activeTask} onClick={() => {}} />
+                    <TaskCard
+                      task={{
+                        id: activeTask.id,
+                        title: activeTask.title,
+                        description: activeTask.description,
+                        assignees: activeTask.assignee
+                          ? [
+                              {
+                                id: activeTask.assignee.id,
+                                name:
+                                  activeTask.assignee.name ||
+                                  activeTask.assignee.email,
+                                avatar: activeTask.assignee.avatarUrl || "",
+                              },
+                            ]
+                          : [],
+                        labels: activeTask.labels.map((l) => l.label),
+                        dueDate: activeTask.dueDate,
+                        priority: activeTask.priority,
+                      }}
+                      onClick={() => {}}
+                    />
                   </motion.div>
                 )}
               </DragOverlay>
@@ -372,68 +370,32 @@ export default function KanbanBoardPage() {
           </div>
 
           {/* Floating Add Button */}
-          <motion.button
-            onClick={() => {
-              setTargetColumn(columns[0]?.id || null);
-              setIsModalOpen(true);
-            }}
-            className={cn(
-              "fixed bottom-8 right-8 w-16 h-16 rounded-full",
-              "bg-gradient-to-r from-primary to-accent",
-              "shadow-2xl",
-              "flex items-center justify-center",
-              "text-white",
-              "z-40",
-              "group"
-            )}
-            style={{
-              boxShadow: "0 8px 32px rgba(255, 30, 86, 0.38)",
-            }}
-            whileHover={{
-              scale: 1.1,
-              y: -4,
-              boxShadow: "0 12px 48px rgba(255, 30, 86, 0.58)",
-              transition: {
-                type: "spring",
-                stiffness: 150,
-                damping: 20,
-              },
-            }}
-            whileTap={{
-              scale: 0.95,
-              transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 25,
-              },
-            }}
-            animate={{
-              boxShadow: [
-                "0 8px 32px rgba(255, 30, 86, 0.38)",
-                "0 12px 48px rgba(255, 30, 86, 0.58)",
-                "0 8px 32px rgba(255, 30, 86, 0.38)",
-              ],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            <motion.div
-              className="absolute inset-0 rounded-full bg-white/20"
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0, 0.3],
+          {canCreateTask && (
+            <motion.button
+              onClick={() => {
+                setTargetColumn("todo");
+                setIsModalOpen(true);
               }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
+              className={cn(
+                "fixed bottom-8 right-8 w-16 h-16 rounded-full",
+                "bg-gradient-to-r from-primary to-accent",
+                "shadow-2xl",
+                "flex items-center justify-center",
+                "text-white",
+                "z-40",
+                "group"
+              )}
+              style={{ boxShadow: "0 8px 32px rgba(255, 30, 86, 0.38)" }}
+              whileHover={{
+                scale: 1.1,
+                y: -4,
+                boxShadow: "0 12px 48px rgba(255, 30, 86, 0.58)",
               }}
-            />
-            <Plus className="w-8 h-8 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
-          </motion.button>
+              whileTap={{ scale: 0.95 }}
+            >
+              <Plus className="w-8 h-8 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
+            </motion.button>
+          )}
 
           {/* New Task Modal */}
           <NewTaskModal
@@ -441,6 +403,8 @@ export default function KanbanBoardPage() {
             onOpenChange={setIsModalOpen}
             columnId={targetColumn || ""}
             onSubmit={handleTaskSubmit}
+            members={members || []}
+            projectId={projectId}
           />
 
           {/* Task Detail Modal */}
@@ -448,35 +412,35 @@ export default function KanbanBoardPage() {
             <TaskDetailModal
               open={isTaskDetailOpen}
               onOpenChange={setIsTaskDetailOpen}
-              task={selectedTask}
-              subtasks={[
-                { id: "1", title: "Wireframes oluştur", completed: true },
-                { id: "2", title: "Mockup tasarla", completed: false },
-                { id: "3", title: "Kullanıcı testi yap", completed: false },
-              ]}
-              comments={[
-                {
-                  id: "1",
-                  author: "John Doe",
-                  content: "Harika bir başlangıç!",
-                  timestamp: new Date(),
-                },
-                {
-                  id: "2",
-                  author: "Jane Smith",
-                  content: "Detayları görüşmek isterim.",
-                  timestamp: new Date(Date.now() - 3600000),
-                },
-              ]}
-              attachments={[
-                {
-                  id: "1",
-                  name: "design-mockup.png",
-                  url: "#",
-                  size: "2.4 MB",
-                  type: "image/png",
-                },
-              ]}
+              task={{
+                id: selectedTask.id,
+                title: selectedTask.title,
+                description: selectedTask.description,
+                assignees: selectedTask.assignee
+                  ? [
+                      {
+                        id: selectedTask.assignee.id,
+                        name:
+                          selectedTask.assignee.name ||
+                          selectedTask.assignee.email,
+                        avatar: selectedTask.assignee.avatarUrl || "",
+                      },
+                    ]
+                  : [],
+                labels: selectedTask.labels.map((l) => l.label),
+                dueDate: selectedTask.dueDate,
+                priority: selectedTask.priority,
+              }}
+              subtasks={
+                selectedTask.subtasks?.map((s) => ({
+                  id: s.id,
+                  title: s.title,
+                  completed: s.completed,
+                })) || []
+              }
+              comments={[]}
+              attachments={[]}
+              onUpdate={() => mutate()}
             />
           )}
         </div>

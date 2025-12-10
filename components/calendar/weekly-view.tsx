@@ -33,7 +33,7 @@ interface WeeklyViewProps {
   onDateClick?: (date: Date) => void;
 }
 
-const weekDays = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+const weekDayNames = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 
 export function WeeklyView({ weekStart, tasks, onTaskClick, onDateClick }: WeeklyViewProps) {
   const weekDays = React.useMemo(() => {
@@ -84,7 +84,7 @@ export function WeeklyView({ weekStart, tasks, onTaskClick, onDateClick }: Weekl
               transition={{ delay: index * 0.05 }}
             >
               <p className="text-xs text-white/50 mb-1">
-                {weekDays[index].slice(0, 3)}
+                {weekDayNames[index].slice(0, 3)}
               </p>
               <p className={cn(
                 "text-2xl font-bold",

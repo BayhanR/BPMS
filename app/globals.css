@@ -35,6 +35,17 @@
   .text-balance {
     text-wrap: balance;
   }
+
+  .noise-overlay {
+    opacity: 0.1;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    background-image: radial-gradient(circle at 50% 50%, rgba(255, 30, 86, 0.25), transparent 45%);
+  }
+
+  .progress-fill {
+    width: calc(var(--w, 0) * 1%);
+  }
 }
 
 /* Smooth scroll */

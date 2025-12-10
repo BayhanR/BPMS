@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { PremiumBackground } from "@/components/auth/premium-background";
 import { PremiumInput } from "@/components/auth/premium-input";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { signIn } from "next-auth/react";
 
 export default function SignInPage() {
@@ -38,14 +40,14 @@ export default function SignInPage() {
       }
 
       if (result?.ok) {
-        setIsLoading(false);
-        setIsTransitioning(true);
-        
-        // Blur out animation
-        setTimeout(() => {
-          router.push("/dashboard");
+      setIsLoading(false);
+      setIsTransitioning(true);
+      
+      // Blur out animation
+      setTimeout(() => {
+        router.push("/dashboard");
           router.refresh();
-        }, 500);
+      }, 500);
       }
     } catch (error) {
       console.error("[SIGNIN] Error:", error);
@@ -66,6 +68,16 @@ export default function SignInPage() {
   return (
     <>
       <PremiumBackground />
+
+      <div className="absolute left-6 top-6 z-20">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Ana Sayfa
+        </Link>
+      </div>
       
       <AnimatePresence mode="wait">
         {!isTransitioning ? (

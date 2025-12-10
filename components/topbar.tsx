@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Search, Sun, Moon, User } from "lucide-react";
+import { Search, Sun, Moon, User, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { NotificationsDropdown } from "./notifications-dropdown";
+import { signOut } from "next-auth/react";
 
 const mockNotifications = [
   {
@@ -41,6 +42,7 @@ interface TopbarProps {
 export function Topbar({ className }: TopbarProps) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const [profileOpen, setProfileOpen] = React.useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -123,20 +125,44 @@ export function Topbar({ className }: TopbarProps) {
           onMarkAllAsRead={() => console.log("Mark all as read")}
         />
 
-        {/* Avatar */}
-        <motion.button
-          className={cn(
-            "w-10 h-10 rounded-full",
-            "bg-gradient-to-br from-primary to-accent",
-            "flex items-center justify-center",
-            "border-2 border-white/20",
-            "hover:border-white/40 transition-colors"
+        {/* Avatar / Profile */}
+        <div className="relative">
+          <motion.button
+            className={cn(
+              "w-10 h-10 rounded-full",
+              "bg-gradient-to-br from-primary to-accent",
+              "flex items-center justify-center",
+              "border-2 border-white/20",
+              "hover:border-white/40 transition-colors"
+            )}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setProfileOpen((p) => !p)}
+          >
+            <User className="w-5 h-5 text-white" />
+          </motion.button>
+
+          {profileOpen && (
+            <motion.div
+              className="absolute right-0 mt-3 w-52 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-2"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ type: "spring", stiffness: 220, damping: 20 }}
+            >
+              <div className="px-3 py-2 text-sm text-white/60 border-b border-white/5">
+                Hesap
+              </div>
+              <button
+                onClick={() => signOut({ callbackUrl: "/signin" })}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/10 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Çıkış Yap
+              </button>
+            </motion.div>
           )}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <User className="w-5 h-5 text-white" />
-        </motion.button>
+        </div>
       </div>
     </motion.header>
   );

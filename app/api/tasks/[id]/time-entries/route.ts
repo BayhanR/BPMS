@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -12,8 +12,9 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const timeEntries = await prisma.timeEntry.findMany({
-      where: { taskId: params.id },
+      where: { taskId: id },
       include: {
         user: {
           select: {
@@ -39,7 +40,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -47,6 +48,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { startTime, endTime, description } = body;
 
@@ -59,7 +61,7 @@ export async function POST(
 
     // Check if task exists
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!task) {
@@ -68,7 +70,7 @@ export async function POST(
 
     const timeEntry = await prisma.timeEntry.create({
       data: {
-        taskId: params.id,
+        taskId: id,
         userId: session.user.id,
         startTime: new Date(startTime),
         endTime: endTime ? new Date(endTime) : null,
@@ -93,7 +95,7 @@ export async function POST(
         action: "time_entry_created",
         entityType: "TimeEntry",
         entityId: timeEntry.id,
-        metadata: { taskId: params.id },
+        metadata: { taskId: id },
       },
     });
 

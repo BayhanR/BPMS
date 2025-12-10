@@ -54,17 +54,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        
+        // İlk giriş veya token yenileme: workspace ve role bilgisini al
+        const membership = await prisma.workspaceMember.findFirst({
+          where: { userId: user.id },
+          orderBy: { workspace: { createdAt: "desc" } },
+        });
+        
+        token.workspaceId = membership?.workspaceId ?? null;
+        token.role = membership?.role ?? null;
       }
+      
+      // Session update tetiklendiğinde (workspace değişikliği)
+      if (trigger === "update" && token.id) {
+        const membership = await prisma.workspaceMember.findFirst({
+          where: { userId: token.id as string },
+          orderBy: { workspace: { createdAt: "desc" } },
+        });
+        
+        token.workspaceId = membership?.workspaceId ?? null;
+        token.role = membership?.role ?? null;
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
+        session.user.workspaceId = token.workspaceId as string | null;
+        session.user.role = token.role as any;
       }
       return session;
     },

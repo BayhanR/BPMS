@@ -15,7 +15,9 @@ import {
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
-import { Plus, Calendar as CalendarIcon, Grid3x3, LayoutList, Search, Download } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, Grid3x3, LayoutList, Search, Download, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { useSidebarContext } from "@/components/sidebar-context";
@@ -25,6 +27,7 @@ import { CalendarFilters } from "@/components/calendar/calendar-filters";
 import { DraggableTask } from "@/components/calendar/draggable-task";
 import { DroppableDay } from "@/components/calendar/droppable-day";
 import { generateICal } from "@/lib/ical-export";
+import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 const monthNames = [
@@ -102,7 +105,11 @@ interface Task {
 }
 
 export default function CalendarPage() {
+  const { data: session, status: sessionStatus } = useSession();
+  const router = useRouter();
   const { sidebarWidth } = useSidebarContext();
+  const { currentWorkspaceId, setWorkspace } = useAppStore();
+  
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
   const [selectedDate, setSelectedDate] = React.useState(new Date());
   const [orderedTasks, setOrderedTasks] = React.useState<string[]>([]);
@@ -120,6 +127,23 @@ export default function CalendarPage() {
   const [draggedTask, setDraggedTask] = React.useState<Task | null>(null);
   const mainRef = React.useRef<HTMLElement>(null);
 
+  // Session'dan workspace ID al veya store'dan
+  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+
+  // Workspace yoksa workspace seçim sayfasına yönlendir
+  React.useEffect(() => {
+    if (sessionStatus === "authenticated" && !workspaceId) {
+      router.push("/workspaces");
+    }
+  }, [sessionStatus, workspaceId, router]);
+
+  // Workspace ID'yi store'a kaydet
+  React.useEffect(() => {
+    if (session?.user?.workspaceId && session?.user?.role) {
+      setWorkspace(session.user.workspaceId, session.user.role);
+    }
+  }, [session?.user?.workspaceId, session?.user?.role, setWorkspace]);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -132,13 +156,15 @@ export default function CalendarPage() {
 
   // Fetch tasks and projects
   React.useEffect(() => {
+    if (!workspaceId) return;
+
     const fetchData = async () => {
       try {
         setIsLoading(true);
         const [tasksRes, projectsRes, usersRes] = await Promise.all([
           fetch("/api/tasks"),
-          fetch("/api/projects"),
-          fetch("/api/users"),
+          fetch(`/api/projects?workspaceId=${workspaceId}`),
+          fetch(`/api/users?workspaceId=${workspaceId}`),
         ]);
 
         if (tasksRes.ok) {
@@ -163,7 +189,16 @@ export default function CalendarPage() {
     };
 
     fetchData();
-  }, [currentMonth]);
+  }, [currentMonth, workspaceId]);
+
+  // Loading state
+  if (sessionStatus === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   // Ensure mouse wheel scroll works on calendar container
   // Global Lenis might be preventing scroll, so we ensure native scroll works

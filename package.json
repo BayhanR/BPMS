@@ -6,7 +6,13 @@
     "dev": "next dev -p 3004",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:seed": "npx tsx prisma/seed.ts",
+    "db:reset": "prisma db push --force-reset && npx tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
@@ -24,26 +30,29 @@
     "clsx": "^2.1.1",
     "framer-motion": "^11.11.11",
     "lenis": "^1.1.16",
-    "lucide-react": "^0.556.0",
-    "next": "^16.0.8",
+    "lucide-react": "^0.460.0",
+    "next": "^15.1.0",
     "next-auth": "^5.0.0-beta.30",
     "next-themes": "^0.4.4",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "react-parallax-tilt": "^1.7.315",
+    "react-parallax-tilt": "^1.7.313",
     "socket.io-client": "^4.7.5",
-    "tailwind-merge": "^2.6.0"
+    "swr": "^2.3.7",
+    "tailwind-merge": "^2.5.4",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
-    "@types/node": "^22.19.2",
-    "@types/react": "^19.2.7",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
-    "eslint-config-next": "^16.0.8",
+    "eslint-config-next": "^15.0.0",
     "postcss": "^8.4.47",
     "prisma": "^6.19.0",
-    "tailwindcss": "^3.4.18",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2"
   }
 }

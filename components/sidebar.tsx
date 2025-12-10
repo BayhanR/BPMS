@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   Sparkles,
+  Shield,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSidebarContext } from "@/components/sidebar-context";
@@ -25,6 +27,8 @@ const menuItems = [
   { icon: FolderKanban, label: "Projects", href: "/projects" },
   { icon: Calendar, label: "Calendar", href: "/calendar" },
   { icon: Users, label: "Team", href: "/team" },
+  { icon: Shield, label: "Admin", href: "/admin" },
+  { icon: Building2, label: "Workspaces", href: "/workspaces" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 

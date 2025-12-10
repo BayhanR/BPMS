@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; entryId: string } }
+  { params }: { params: Promise<{ id: string; entryId: string }> }
 ) {
   try {
     const session = await auth();
@@ -12,11 +12,12 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { entryId } = await params;
     const body = await request.json();
     const { endTime, description } = body;
 
     const timeEntry = await prisma.timeEntry.findUnique({
-      where: { id: params.entryId },
+      where: { id: entryId },
     });
 
     if (!timeEntry) {
@@ -28,7 +29,7 @@ export async function PUT(
     }
 
     const updated = await prisma.timeEntry.update({
-      where: { id: params.entryId },
+      where: { id: entryId },
       data: {
         endTime: endTime ? new Date(endTime) : null,
         description,
@@ -57,7 +58,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; entryId: string } }
+  { params }: { params: Promise<{ id: string; entryId: string }> }
 ) {
   try {
     const session = await auth();
@@ -65,8 +66,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { entryId } = await params;
     const timeEntry = await prisma.timeEntry.findUnique({
-      where: { id: params.entryId },
+      where: { id: entryId },
     });
 
     if (!timeEntry) {
@@ -78,7 +80,7 @@ export async function DELETE(
     }
 
     await prisma.timeEntry.delete({
-      where: { id: params.entryId },
+      where: { id: entryId },
     });
 
     return NextResponse.json({ success: true });

@@ -2,98 +2,135 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import useSWR from "swr";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { useSidebarContext } from "@/components/sidebar-context";
-import { mockUsers, mockTasks, mockProjects } from "@/lib/mock-data";
+import { useAppStore } from "@/lib/store";
+import { usePermissions } from "@/hooks/use-permissions";
 import { cn } from "@/lib/utils";
-import { Plus, Search, Upload, Building2, Users, TrendingUp, FolderKanban, Clock, CheckCircle2 } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Upload,
+  Building2,
+  Users,
+  TrendingUp,
+  FolderKanban,
+  Clock,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  MoreVertical,
+  Shield,
+  Edit3,
+  Eye,
+  UserMinus,
+} from "lucide-react";
 
-const workspaceName = "Bayhan Core Workspace";
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
-// Genişletilmiş mock üyeler (12-15 kişi)
-const extendedUsers = [
-  ...mockUsers,
-  { id: "u-ali", name: "Ali Yılmaz", email: "ali@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=1", role: "editor" as const, online: true, activeTasks: 7 },
-  { id: "u-zeynep", name: "Zeynep Demir", email: "zeynep@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=12", role: "admin" as const, online: false, activeTasks: 4 },
-  { id: "u-can", name: "Can Öztürk", email: "can@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=33", role: "editor" as const, online: true, activeTasks: 9 },
-  { id: "u-ayse", name: "Ayşe Kaya", email: "ayse@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=28", role: "viewer" as const, online: true, activeTasks: 2 },
-  { id: "u-mehmet", name: "Mehmet Arslan", email: "mehmet@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=8", role: "editor" as const, online: false, activeTasks: 6 },
-  { id: "u-elif", name: "Elif Şahin", email: "elif@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=45", role: "admin" as const, online: true, activeTasks: 11 },
-  { id: "u-kerem", name: "Kerem Çelik", email: "kerem@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=19", role: "editor" as const, online: true, activeTasks: 5 },
-  { id: "u-deniz", name: "Deniz Aydın", email: "deniz@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=52", role: "viewer" as const, online: false, activeTasks: 3 },
-  { id: "u-berkay", name: "Berkay Yıldız", email: "berkay@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=16", role: "editor" as const, online: true, activeTasks: 8 },
-  { id: "u-selin", name: "Selin Özdemir", email: "selin@bpms.io", avatarUrl: "https://i.pravatar.cc/120?img=37", role: "admin" as const, online: true, activeTasks: 10 },
-];
-
-// Her üye için random proje tag'leri
-const getUserProjects = (userId: string) => {
-  const userProjects = mockProjects
-    .sort(() => Math.random() - 0.5)
-    .slice(0, Math.floor(Math.random() * 3) + 1)
-    .map((p) => ({ id: p.id, name: p.name, color: p.color }));
-  return userProjects;
-};
-
-// Bu hafta tamamlanan task sayısı (mock)
-const getWeekTasks = (userId: string) => {
-  return Math.floor(Math.random() * 12) + 1;
-};
-
-// Son görülme (mock)
-const getLastSeen = (online: boolean) => {
-  if (online) return "Şu an aktif";
-  const hours = Math.floor(Math.random() * 48);
-  if (hours === 0) return "Az önce";
-  if (hours < 24) return `${hours} saat önce`;
-  return `${Math.floor(hours / 24)} gün önce`;
-};
+interface TeamMember {
+  id: string;
+  name: string | null;
+  email: string;
+  avatarUrl: string | null;
+  role: "admin" | "editor" | "viewer";
+  activeTasks: number;
+  lastActivity: string;
+  online: boolean;
+}
 
 export default function TeamPage() {
+  const { data: session, status: sessionStatus } = useSession();
+  const router = useRouter();
   const { sidebarWidth } = useSidebarContext();
+  const { currentWorkspaceId, setWorkspace } = useAppStore();
+  const { canInviteUser, canChangeRole, canRemoveUser, isAdmin } = usePermissions();
+
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filter, setFilter] = React.useState<"all" | "admin" | "editor" | "viewer" | "online">("all");
 
+  // Session'dan workspace ID al veya store'dan
+  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+
+  // Users API çağrısı
+  const { data: users, error, isLoading, mutate } = useSWR<TeamMember[]>(
+    workspaceId ? `/api/users?workspaceId=${workspaceId}` : null,
+    fetcher
+  );
+
+  // Workspace yoksa workspace seçim sayfasına yönlendir
+  React.useEffect(() => {
+    if (sessionStatus === "authenticated" && !workspaceId) {
+      router.push("/workspaces");
+    }
+  }, [sessionStatus, workspaceId, router]);
+
+  // Workspace ID'yi store'a kaydet
+  React.useEffect(() => {
+    if (session?.user?.workspaceId && session?.user?.role) {
+      setWorkspace(session.user.workspaceId, session.user.role);
+    }
+  }, [session?.user?.workspaceId, session?.user?.role, setWorkspace]);
+
   // Filtrelenmiş üyeler
   const filteredUsers = React.useMemo(() => {
-    return extendedUsers.filter((user) => {
-      const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           user.email.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const matchesFilter = filter === "all" ||
-                           filter === "online" && user.online ||
-                           user.role === filter;
+    if (!users) return [];
+    return users.filter((user) => {
+      const matchesSearch =
+        (user.name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesFilter =
+        filter === "all" ||
+        (filter === "online" && user.online) ||
+        user.role === filter;
 
       return matchesSearch && matchesFilter;
     });
-  }, [searchQuery, filter]);
+  }, [users, searchQuery, filter]);
 
-  // Workspace istatistikleri
+  // İstatistikler
   const stats = React.useMemo(() => {
-    const totalMembers = extendedUsers.length;
-    const onlineCount = extendedUsers.filter((u) => u.online).length;
-    const thisWeekTasks = mockTasks.filter((task) => {
-      const taskDate = new Date(task.dueDate);
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      return task.status === "done" && taskDate >= weekAgo;
-    }).length;
+    if (!users) return null;
+    const totalMembers = users.length;
+    const onlineCount = users.filter((u) => u.online).length;
+    const totalActiveTasks = users.reduce((sum, u) => sum + u.activeTasks, 0);
 
-    // Bu hafta en aktif 3 kişi
-    const weeklyStats = extendedUsers.map((user) => ({
-      ...user,
-      weekTasks: getWeekTasks(user.id),
-    })).sort((a, b) => b.weekTasks - a.weekTasks).slice(0, 3);
+    // En aktif 3 kişi
+    const topContributors = [...users]
+      .sort((a, b) => b.activeTasks - a.activeTasks)
+      .slice(0, 3);
 
     return {
       totalMembers,
       onlineCount,
-      weekTasks: thisWeekTasks,
-      activeProjects: mockProjects.length,
-      pendingInvites: 3,
-      topContributors: weeklyStats,
+      totalActiveTasks,
+      topContributors,
     };
-  }, []);
+  }, [users]);
+
+  if (sessionStatus === "loading" || isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+        <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+          <AlertCircle className="w-5 h-5" />
+          <span>Takım verileri yüklenirken bir hata oluştu.</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -133,7 +170,6 @@ export default function TeamPage() {
                     { label: "Admin", value: "admin" },
                     { label: "Editor", value: "editor" },
                     { label: "Viewer", value: "viewer" },
-                    { label: "Online", value: "online" },
                   ].map((option) => (
                     <button
                       key={option.value}
@@ -152,28 +188,48 @@ export default function TeamPage() {
               </div>
 
               {/* Invite Member */}
-              <InviteButtonHeader />
+              {canInviteUser && (
+                <InviteButtonHeader workspaceId={workspaceId!} onSuccess={() => mutate()} />
+              )}
             </header>
 
             {/* Ana Alan - 2 Sütun */}
             <div className="grid gap-6 lg:grid-cols-[65%_35%] grid-cols-1">
               {/* Sol: Ekip Grid */}
-              <MemberGrid users={filteredUsers} />
+              <MemberGrid
+                users={filteredUsers}
+                currentUserId={session?.user?.id || ""}
+                workspaceId={workspaceId!}
+                canChangeRole={canChangeRole}
+                canRemoveUser={canRemoveUser}
+                onUpdate={() => mutate()}
+              />
 
-              {/* Sağ: Workspace İstatistikleri */}
-              <WorkspaceStats stats={stats} />
+              {/* Sağ: İstatistikler */}
+              {stats && <WorkspaceStats stats={stats} />}
             </div>
           </div>
-
-          {/* Alt Sabit Butonlar */}
-          <FixedBottomButtons />
         </main>
       </div>
     </div>
   );
 }
 
-function MemberGrid({ users }: { users: typeof extendedUsers }) {
+function MemberGrid({
+  users,
+  currentUserId,
+  workspaceId,
+  canChangeRole,
+  canRemoveUser,
+  onUpdate,
+}: {
+  users: TeamMember[];
+  currentUserId: string;
+  workspaceId: string;
+  canChangeRole: boolean;
+  canRemoveUser: boolean;
+  onUpdate: () => void;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -183,7 +239,16 @@ function MemberGrid({ users }: { users: typeof extendedUsers }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <AnimatePresence>
           {users.map((user, index) => (
-            <MemberCard key={user.id} user={user} index={index} />
+            <MemberCard
+              key={user.id}
+              user={user}
+              index={index}
+              isCurrentUser={user.id === currentUserId}
+              workspaceId={workspaceId}
+              canChangeRole={canChangeRole}
+              canRemoveUser={canRemoveUser}
+              onUpdate={onUpdate}
+            />
           ))}
         </AnimatePresence>
       </div>
@@ -191,54 +256,161 @@ function MemberGrid({ users }: { users: typeof extendedUsers }) {
   );
 }
 
-function MemberCard({ user, index }: { user: typeof extendedUsers[number]; index: number }) {
+function MemberCard({
+  user,
+  index,
+  isCurrentUser,
+  workspaceId,
+  canChangeRole,
+  canRemoveUser,
+  onUpdate,
+}: {
+  user: TeamMember;
+  index: number;
+  isCurrentUser: boolean;
+  workspaceId: string;
+  canChangeRole: boolean;
+  canRemoveUser: boolean;
+  onUpdate: () => void;
+}) {
   const [isHovered, setIsHovered] = React.useState(false);
-  const userProjects = getUserProjects(user.id);
-  const weekTasks = getWeekTasks(user.id);
-  const lastSeen = getLastSeen(user.online);
+  const [showMenu, setShowMenu] = React.useState(false);
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  const handleRoleChange = async (newRole: string) => {
+    setIsUpdating(true);
+    try {
+      await fetch(`/api/admin/users/${user.id}?workspaceId=${workspaceId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      onUpdate();
+    } catch (error) {
+      console.error("Role change error:", error);
+    } finally {
+      setIsUpdating(false);
+      setShowMenu(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!confirm(`${user.name || user.email} kullanıcısını ekipten çıkarmak istediğinize emin misiniz?`)) {
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await fetch(`/api/admin/users/${user.id}?workspaceId=${workspaceId}`, {
+        method: "DELETE",
+      });
+      onUpdate();
+    } catch (error) {
+      console.error("Remove user error:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const roleIcons = {
+    admin: Shield,
+    editor: Edit3,
+    viewer: Eye,
+  };
+  const RoleIcon = roleIcons[user.role];
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      transition={{
-        delay: index * 0.03,
-        type: "spring",
-        stiffness: 380,
-        damping: 28,
-      }}
+      transition={{ delay: index * 0.03, type: "spring", stiffness: 380, damping: 28 }}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        setShowMenu(false);
+      }}
     >
       <div
         className={cn(
           "relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 cursor-pointer transition-all overflow-hidden",
-          isHovered && "border-[#ff1e56]/50"
+          isHovered && "border-[#ff1e56]/50",
+          isCurrentUser && "ring-1 ring-[#ff1e56]/30"
         )}
       >
-        {/* Hover glow */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl opacity-0"
-          animate={{ opacity: isHovered ? 0.2 : 0 }}
-          style={{
-            background: `radial-gradient(circle at center, rgba(255,30,86,0.3), transparent 70%)`,
-          }}
-        />
+        {isUpdating && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
+            <Loader2 className="w-6 h-6 text-white animate-spin" />
+          </div>
+        )}
+
+        {/* Menu Button */}
+        {(canChangeRole || canRemoveUser) && !isCurrentUser && (
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="absolute top-3 right-3 p-1 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+          >
+            <MoreVertical className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Dropdown Menu */}
+        {showMenu && (
+          <div className="absolute top-10 right-3 z-30 min-w-[140px] rounded-xl border border-white/10 bg-[#1a1a1a] shadow-2xl overflow-hidden">
+            {canChangeRole && (
+              <>
+                <button
+                  onClick={() => handleRoleChange("admin")}
+                  disabled={user.role === "admin"}
+                  className="w-full px-4 py-2 text-left text-sm text-white/80 hover:bg-white/10 disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Shield className="w-4 h-4" /> Admin Yap
+                </button>
+                <button
+                  onClick={() => handleRoleChange("editor")}
+                  disabled={user.role === "editor"}
+                  className="w-full px-4 py-2 text-left text-sm text-white/80 hover:bg-white/10 disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Edit3 className="w-4 h-4" /> Editor Yap
+                </button>
+                <button
+                  onClick={() => handleRoleChange("viewer")}
+                  disabled={user.role === "viewer"}
+                  className="w-full px-4 py-2 text-left text-sm text-white/80 hover:bg-white/10 disabled:opacity-50 flex items-center gap-2"
+                >
+                  <Eye className="w-4 h-4" /> Viewer Yap
+                </button>
+              </>
+            )}
+            {canRemoveUser && (
+              <button
+                onClick={handleRemove}
+                className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2"
+              >
+                <UserMinus className="w-4 h-4" /> Ekipten Çıkar
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="relative z-10 space-y-4">
           {/* Avatar + İsim + Rol */}
           <div className="flex items-start gap-3">
             <div className="relative">
-              <motion.img
-                src={user.avatarUrl}
-                alt={user.name}
-                className={cn(
-                  "w-14 h-14 rounded-xl object-cover border-2 transition-all",
-                  isHovered ? "border-[#ff1e56]/60 shadow-lg shadow-[#ff1e56]/30" : "border-white/20"
-                )}
-                animate={{ scale: isHovered ? 1.05 : 1 }}
-              />
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={user.name || "User"}
+                  className={cn(
+                    "w-14 h-14 rounded-xl object-cover border-2 transition-all",
+                    isHovered ? "border-[#ff1e56]/60" : "border-white/20"
+                  )}
+                />
+              ) : (
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#ff1e56] to-[#ff006e] flex items-center justify-center text-white font-bold text-xl">
+                  {(user.name || user.email).charAt(0).toUpperCase()}
+                </div>
+              )}
               <span
                 className={cn(
                   "absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-2 border-[#0a0a0a]",
@@ -248,110 +420,33 @@ function MemberCard({ user, index }: { user: typeof extendedUsers[number]; index
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-white truncate">{user.name}</p>
-              <span className={cn(
-                "inline-block mt-1 text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border",
-                user.role === "admin" && "bg-[#ff1e56]/20 border-[#ff1e56]/40 text-[#ff1e56]",
-                user.role === "editor" && "bg-white/10 border-white/20 text-white/80",
-                user.role === "viewer" && "bg-white/5 border-white/10 text-white/60"
-              )}>
+              <p className="font-semibold text-white truncate">
+                {user.name || "İsimsiz Kullanıcı"}
+                {isCurrentUser && <span className="text-xs text-white/40 ml-1">(Sen)</span>}
+              </p>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 mt-1 text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded-full border",
+                  user.role === "admin" && "bg-[#ff1e56]/20 border-[#ff1e56]/40 text-[#ff1e56]",
+                  user.role === "editor" && "bg-white/10 border-white/20 text-white/80",
+                  user.role === "viewer" && "bg-white/5 border-white/10 text-white/60"
+                )}
+              >
+                <RoleIcon className="w-3 h-3" />
                 {user.role}
               </span>
             </div>
           </div>
 
-          {/* Online durum */}
-          <div className="flex items-center gap-2 text-xs text-white/60">
-            <Clock className="w-3 h-3" />
-            <span>{lastSeen}</span>
-          </div>
+          {/* Email */}
+          <p className="text-xs text-white/50 truncate">{user.email}</p>
 
-          {/* Proje Tag'leri */}
-          {userProjects.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {userProjects.slice(0, 3).map((project) => (
-                <span
-                  key={project.id}
-                  className="px-2 py-1 rounded-lg text-[10px] font-medium border"
-                  style={{
-                    backgroundColor: `${project.color}20`,
-                    borderColor: `${project.color}40`,
-                    color: project.color,
-                  }}
-                >
-                  {project.name.split(" ")[0]}
-                </span>
-              ))}
-              {userProjects.length > 3 && (
-                <span className="px-2 py-1 rounded-lg text-[10px] font-medium bg-white/5 border border-white/10 text-white/60">
-                  +{userProjects.length - 3}
-                </span>
-              )}
+          {/* Stats */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+            <div className="flex items-center gap-2 text-xs text-white/60">
+              <Clock className="w-3 h-3" />
+              <span>{user.activeTasks} aktif görev</span>
             </div>
-          )}
-
-          {/* Bu hafta task sayısı / Profiline Git butonu - aynı yerde fade */}
-          <div className="pt-2 border-t border-white/10 relative min-h-[60px] flex items-center">
-            <AnimatePresence mode="wait">
-              {!isHovered ? (
-                <motion.div
-                  key="week-tasks"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="flex items-center justify-between w-full"
-                >
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-white/50" />
-                    <span className="text-xs text-white/60">Bu hafta</span>
-                  </div>
-                  <div className="relative w-12 h-12">
-                    <svg className="w-12 h-12 transform -rotate-90" viewBox="0 0 40 40">
-                      <circle
-                        cx="20"
-                        cy="20"
-                        r="16"
-                        fill="transparent"
-                        stroke="rgba(255,255,255,0.1)"
-                        strokeWidth="4"
-                      />
-                      <motion.circle
-                        cx="20"
-                        cy="20"
-                        r="16"
-                        fill="transparent"
-                        stroke="#ff1e56"
-                        strokeWidth="4"
-                        strokeLinecap="round"
-                        strokeDasharray={`${2 * Math.PI * 16}`}
-                        initial={{ strokeDashoffset: 2 * Math.PI * 16 }}
-                        animate={{
-                          strokeDashoffset: 2 * Math.PI * 16 * (1 - Math.min(weekTasks / 15, 1)),
-                        }}
-                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs font-bold text-white">{weekTasks}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.button
-                  key="profile-button"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-semibold text-sm shadow-lg shadow-[#ff1e56]/30"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Profiline Git
-                </motion.button>
-              )}
-            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -374,39 +469,40 @@ function WorkspaceStats({ stats }: { stats: any }) {
         <p className="text-xs text-white/50">{stats.onlineCount} şu an online</p>
       </div>
 
-      {/* En Aktif 3 Kişi */}
+      {/* En Aktif Kişiler */}
       <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="w-5 h-5 text-[#ff1e56]" />
-          <p className="text-sm font-semibold text-white">Bu Hafta En Aktif</p>
+          <p className="text-sm font-semibold text-white">En Aktif Üyeler</p>
         </div>
         <div className="space-y-3">
-          {stats.topContributors.map((member: any, index: number) => (
+          {stats.topContributors.map((member: TeamMember, index: number) => (
             <motion.div
               key={member.id}
               className="flex items-center gap-3"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{
-                delay: index * 0.1,
-                type: "spring",
-                stiffness: 380,
-                damping: 28,
-              }}
+              transition={{ delay: index * 0.1, type: "spring", stiffness: 380, damping: 28 }}
             >
               <div className="relative">
-                <img
-                  src={member.avatarUrl}
-                  alt={member.name}
-                  className="w-10 h-10 rounded-lg object-cover border border-[#ff1e56]/40"
-                />
-                {index === 0 && (
-                  <span className="absolute -top-1 -right-1 text-xs">🏆</span>
+                {member.avatarUrl ? (
+                  <img
+                    src={member.avatarUrl}
+                    alt={member.name || "User"}
+                    className="w-10 h-10 rounded-lg object-cover border border-[#ff1e56]/40"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#ff1e56] to-[#ff006e] flex items-center justify-center text-white font-bold">
+                    {(member.name || member.email).charAt(0).toUpperCase()}
+                  </div>
                 )}
+                {index === 0 && <span className="absolute -top-1 -right-1 text-xs">🏆</span>}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{member.name}</p>
-                <p className="text-xs text-white/60">{member.weekTasks} görev</p>
+                <p className="text-sm font-medium text-white truncate">
+                  {member.name || member.email}
+                </p>
+                <p className="text-xs text-white/60">{member.activeTasks} görev</p>
               </div>
               <div className="text-xs font-semibold text-[#ff1e56]">#{index + 1}</div>
             </motion.div>
@@ -414,49 +510,27 @@ function WorkspaceStats({ stats }: { stats: any }) {
         </div>
       </div>
 
-      {/* Workspace Velocity */}
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <FolderKanban className="w-5 h-5 text-[#ff1e56]" />
-          <p className="text-sm font-semibold text-white">Velocity</p>
-        </div>
-        <p className="text-4xl font-bold text-white mb-1">{stats.weekTasks}</p>
-        <p className="text-xs text-white/50">Son 7 gün tamamlanan görev</p>
-      </div>
-
-      {/* Aktif Proje */}
+      {/* Toplam Aktif Görev */}
       <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-white/60 mb-1">Aktif Proje</p>
-            <p className="text-2xl font-bold text-white">{stats.activeProjects}</p>
+            <p className="text-sm font-medium text-white/60 mb-1">Toplam Aktif Görev</p>
+            <p className="text-2xl font-bold text-white">{stats.totalActiveTasks}</p>
           </div>
           <FolderKanban className="w-8 h-8 text-[#ff1e56]/50" />
         </div>
       </div>
-
-      {/* Pending Invites */}
-      {stats.pendingInvites > 0 && (
-        <div className="rounded-2xl border border-[#ff1e56]/40 bg-[#ff1e56]/10 backdrop-blur-xl p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-white/80 mb-1">Bekleyen Davetler</p>
-              <p className="text-2xl font-bold text-white">{stats.pendingInvites}</p>
-            </div>
-            <div className="relative">
-              <Users className="w-8 h-8 text-[#ff1e56]" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#ff1e56] text-white text-xs flex items-center justify-center font-bold">
-                {stats.pendingInvites}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-function InviteButtonHeader() {
+function InviteButtonHeader({
+  workspaceId,
+  onSuccess,
+}: {
+  workspaceId: string;
+  onSuccess: () => void;
+}) {
   const [showModal, setShowModal] = React.useState(false);
 
   return (
@@ -468,40 +542,65 @@ function InviteButtonHeader() {
         onClick={() => setShowModal(true)}
       >
         <Plus className="w-5 h-5" />
-        Invite Member
+        Üye Davet Et
       </motion.button>
 
-      {showModal && <InviteModal onClose={() => setShowModal(false)} />}
+      {showModal && (
+        <InviteModal
+          workspaceId={workspaceId}
+          onClose={() => setShowModal(false)}
+          onSuccess={onSuccess}
+        />
+      )}
     </>
   );
 }
 
-function FixedBottomButtons() {
-  return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3">
-      <motion.button
-        className="px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-white font-medium flex items-center gap-2 shadow-lg"
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Upload className="w-5 h-5" />
-        Bulk Invite (CSV)
-      </motion.button>
-
-      <motion.button
-        className="px-6 py-3 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl text-white font-medium flex items-center gap-2 shadow-lg"
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Building2 className="w-5 h-5" />
-        Departman Ekle
-      </motion.button>
-    </div>
-  );
-}
-
-function InviteModal({ onClose }: { onClose: () => void }) {
+function InviteModal({
+  workspaceId,
+  onClose,
+  onSuccess,
+}: {
+  workspaceId: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
   const [email, setEmail] = React.useState("");
+  const [role, setRole] = React.useState<"editor" | "viewer">("editor");
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const handleInvite = async () => {
+    if (!email) {
+      setError("E-posta adresi gerekli");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/workspaces/${workspaceId}/invite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, role }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Davet gönderilemedi");
+        return;
+      }
+
+      onSuccess();
+      onClose();
+    } catch (err) {
+      setError("Bir hata oluştu");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -522,6 +621,13 @@ function InviteModal({ onClose }: { onClose: () => void }) {
       >
         <h3 className="text-2xl font-bold text-white mb-2">Üye Davet Et</h3>
         <p className="text-sm text-white/60 mb-6">E-posta adresi ile yeni üye davet edin</p>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-white/80 mb-2">E-posta Adresi</label>
@@ -533,24 +639,49 @@ function InviteModal({ onClose }: { onClose: () => void }) {
               className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-white/40 focus:outline-none focus:border-[#ff1e56]/50 focus:ring-2 focus:ring-[#ff1e56]/20 transition-all"
             />
           </div>
-          <div className="flex gap-3">
+
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Rol</label>
+            <div className="flex gap-2">
+              {[
+                { value: "editor", label: "Editor", icon: Edit3 },
+                { value: "viewer", label: "Viewer", icon: Eye },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setRole(option.value as typeof role)}
+                  className={cn(
+                    "flex-1 px-4 py-3 rounded-xl border flex items-center justify-center gap-2 transition-all",
+                    role === option.value
+                      ? "border-[#ff1e56]/50 bg-[#ff1e56]/10 text-white"
+                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                  )}
+                >
+                  <option.icon className="w-4 h-4" />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3 pt-2">
             <motion.button
               className="flex-1 px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={onClose}
+              disabled={isLoading}
             >
               İptal
             </motion.button>
             <motion.button
-              className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-semibold shadow-lg shadow-[#ff1e56]/30"
+              className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-semibold shadow-lg shadow-[#ff1e56]/30 disabled:opacity-50"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                onClose();
-              }}
+              onClick={handleInvite}
+              disabled={isLoading}
             >
-              Davet Gönder
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Davet Gönder"}
             </motion.button>
           </div>
         </div>

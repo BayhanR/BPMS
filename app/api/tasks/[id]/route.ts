@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -12,8 +12,9 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         assignee: {
           select: {
@@ -107,7 +108,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -115,6 +116,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const {
       title,
@@ -132,7 +134,7 @@ export async function PUT(
 
     // Check if task exists
     const existingTask = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existingTask) {
@@ -154,7 +156,7 @@ export async function PUT(
     if (status !== undefined) updateData.status = status;
 
     const task = await prisma.task.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         assignee: {
@@ -186,13 +188,13 @@ export async function PUT(
     // Update labels if provided
     if (labels !== undefined) {
       await prisma.taskLabel.deleteMany({
-        where: { taskId: params.id },
+        where: { taskId: id },
       });
 
       if (labels.length > 0) {
         await prisma.taskLabel.createMany({
           data: labels.map((labelId: string) => ({
-            taskId: params.id,
+            taskId: id,
             labelId,
           })),
         });
@@ -222,7 +224,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -230,8 +232,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { id } = await params;
     const task = await prisma.task.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { id: true, title: true },
     });
 
@@ -240,7 +243,7 @@ export async function DELETE(
     }
 
     await prisma.task.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     // Create activity log
