@@ -191,15 +191,6 @@ export default function CalendarPage() {
     fetchData();
   }, [currentMonth, workspaceId]);
 
-  // Loading state
-  if (sessionStatus === "loading") {
-    return (
-      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      </div>
-    );
-  }
-
   // Ensure mouse wheel scroll works on calendar container
   // Global Lenis might be preventing scroll, so we ensure native scroll works
   React.useEffect(() => {

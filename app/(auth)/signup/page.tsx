@@ -26,7 +26,7 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
+    
     if (password !== confirmPassword) {
       setError("Şifreler eşleşmiyor!");
       return;
@@ -65,14 +65,14 @@ export default function SignUpPage() {
       });
 
       if (result?.ok) {
-        setIsLoading(false);
-        setIsTransitioning(true);
-        
-        // Blur out animation
-        setTimeout(() => {
-          router.push("/dashboard");
+      setIsLoading(false);
+      setIsTransitioning(true);
+      
+      // Blur out animation
+      setTimeout(() => {
+        router.push("/dashboard");
           router.refresh();
-        }, 500);
+      }, 500);
       } else {
         setError("Hesap oluşturuldu ancak giriş yapılamadı. Lütfen giriş sayfasından deneyin.");
         setIsLoading(false);

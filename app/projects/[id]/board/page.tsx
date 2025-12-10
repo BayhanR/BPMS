@@ -25,10 +25,7 @@ import { TaskCard } from "@/components/kanban/task-card";
 import { NewTaskModal } from "@/components/kanban/new-task-modal";
 import { TaskDetailModal } from "@/components/kanban/task-detail-modal";
 import { Plus, Loader2, AlertCircle } from "lucide-react";
-import { Sidebar } from "@/components/sidebar";
-import { Topbar } from "@/components/topbar";
 import { cn } from "@/lib/utils";
-import { useSidebarContext } from "@/components/sidebar-context";
 import { useAppStore } from "@/lib/store";
 import { usePermissions } from "@/hooks/use-permissions";
 
@@ -81,7 +78,6 @@ export default function KanbanBoardPage() {
   const { data: session, status: sessionStatus } = useSession();
   const { currentWorkspaceId, setProject } = useAppStore();
   const { canCreateTask, canEditTask } = usePermissions();
-  const { sidebarWidth } = useSidebarContext();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -237,17 +233,9 @@ export default function KanbanBoardPage() {
 
   const activeTask = tasks?.find((task) => task.id === activeId);
 
-  const contentStyle = React.useMemo(
-    () => ({
-      paddingLeft: sidebarWidth,
-      transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-    }),
-    [sidebarWidth]
-  );
-
   if (sessionStatus === "loading" || isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+      <div className="flex flex-1 items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
@@ -255,7 +243,7 @@ export default function KanbanBoardPage() {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
+      <div className="flex flex-1 items-center justify-center">
         <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
           <AlertCircle className="w-5 h-5" />
           <span>Görevler yüklenirken bir hata oluştu.</span>
@@ -265,23 +253,19 @@ export default function KanbanBoardPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col" style={contentStyle}>
-        <Topbar />
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
-          {/* Header */}
-          <motion.div
-            className="mb-6"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 150, damping: 20 }}
-          >
-            <h1 className="text-3xl font-bold text-white mb-2">Kanban Board</h1>
-            <p className="text-white/60">
-              {tasks?.length || 0} görev · Sürükle bırak ile durumları değiştir
-            </p>
-          </motion.div>
+    <div className="flex-1 overflow-y-auto p-4 md:p-6">
+      {/* Header */}
+      <motion.div
+        className="mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 150, damping: 20 }}
+      >
+        <h1 className="text-3xl font-bold text-white mb-2">Kanban Board</h1>
+        <p className="text-white/60">
+          {tasks?.length || 0} görev · Sürükle bırak ile durumları değiştir
+        </p>
+      </motion.div>
 
           {/* Board */}
           <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
@@ -443,8 +427,6 @@ export default function KanbanBoardPage() {
               onUpdate={() => mutate()}
             />
           )}
-        </div>
-      </div>
     </div>
   );
 }
