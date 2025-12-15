@@ -50,8 +50,8 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [activeTab, setActiveTab] = React.useState<"users" | "settings">("users");
 
-  // Session'dan workspace ID al veya store'dan
-  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+  // Store'dan workspace ID al, yoksa session'dan
+  const workspaceId = currentWorkspaceId || session?.user?.workspaceId;
 
   // Admin users API çağrısı
   const { data: users, error, isLoading, mutate } = useSWR<AdminUser[]>(

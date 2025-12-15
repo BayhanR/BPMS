@@ -68,8 +68,8 @@ export default function ProjectsPage() {
   const [navigationDirection, setNavigationDirection] = React.useState<"left" | "right">("right");
   const [viewMode, setViewMode] = React.useState<"spatial" | "classic">("spatial");
 
-  // Session'dan workspace ID al veya store'dan
-  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+  // Store'dan workspace ID al, yoksa session'dan
+  const workspaceId = currentWorkspaceId || session?.user?.workspaceId;
 
   // Projects API çağrısı
   const { data: projects, error, isLoading, mutate } = useSWR<Project[]>(
@@ -107,8 +107,10 @@ export default function ProjectsPage() {
     }
   }, [selectedId, setSelectedProjectId]);
 
-  const selectedIndex = projects?.findIndex((p) => p.id === selectedId) ?? 0;
-  const focusProject = projects?.[selectedIndex];
+  const selectedIndex = Array.isArray(projects) && projects.length > 0 
+    ? (projects.findIndex((p) => p.id === selectedId) ?? 0)
+    : -1;
+  const focusProject = selectedIndex >= 0 && projects ? projects[selectedIndex] : null;
 
   const viewOptions = [
     { label: "Deck", value: "spatial" as const, icon: <Grid3x3 className="w-4 h-4" /> },
@@ -123,14 +125,19 @@ export default function ProjectsPage() {
     [sidebarWidth]
   );
 
-  const leftDeck = projects?.slice(0, selectedIndex).slice(-3) || [];
-  const rightDeck = projects?.slice(selectedIndex + 1).slice(0, 3) || [];
+  const leftDeck = Array.isArray(projects) && selectedIndex >= 0 
+    ? projects.slice(0, selectedIndex).slice(-3) 
+    : [];
+  const rightDeck = Array.isArray(projects) && selectedIndex >= 0 
+    ? projects.slice(selectedIndex + 1).slice(0, 3) 
+    : [];
 
   // Klavye navigasyonu
   React.useEffect(() => {
-    if (!projects || projects.length === 0) return;
+    if (!Array.isArray(projects) || projects.length === 0) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!Array.isArray(projects)) return;
       const currentIdx = projects.findIndex((p) => p.id === selectedId);
       if (currentIdx === -1) return;
 

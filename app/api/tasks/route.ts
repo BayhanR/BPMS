@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { createTaskSchema } from "@/lib/validations/task";
 
 export async function GET(request: NextRequest) {
   try {
@@ -94,6 +95,16 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    // 1. Zod Validation
+    const validationResult = createTaskSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: validationResult.error.format() },
+        { status: 400 }
+      );
+    }
+
     const {
       title,
       description,
@@ -106,13 +117,33 @@ export async function POST(request: NextRequest) {
       priority,
       status,
       labels,
-    } = body;
+    } = validationResult.data;
 
-    if (!title || !projectId) {
-      return NextResponse.json(
-        { error: "Title and projectId are required" },
-        { status: 400 }
-      );
+    // 2. Security Check (IDOR Prevention)
+    // Check if the user is a member of the workspace that the project belongs to
+    // or checks if the user has access to the project.
+    // Assuming projects belong to a workspace and we should check workspace membership.
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { workspaceId: true }
+    });
+
+    if (!project) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const membership = await prisma.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: session.user.id,
+          workspaceId: project.workspaceId
+        }
+      }
+    });
+
+    if (!membership) {
+      return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
     }
 
     // Get max order for the project
@@ -137,10 +168,10 @@ export async function POST(request: NextRequest) {
         order: (maxOrder?.order || 0) + 1,
         labels: labels
           ? {
-              create: labels.map((labelId: string) => ({
-                labelId,
-              })),
-            }
+            create: labels.map((labelId) => ({
+              labelId,
+            })),
+          }
           : undefined,
       },
       include: {

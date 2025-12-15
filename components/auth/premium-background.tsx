@@ -4,14 +4,17 @@ import * as React from "react";
 import { motion } from "framer-motion";
 
 export function PremiumBackground() {
-  const particles = Array.from({ length: 50 }).map((_, i) => ({
-    id: i,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    size: Math.random() * 4 + 1,
-    duration: Math.random() * 20 + 10,
-    delay: Math.random() * 5,
-  }));
+  // Partikülleri sabitle - her render'da yeniden oluşturma
+  const particles = React.useMemo(() => {
+    return Array.from({ length: 50 }).map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: Math.random() * 4 + 1,
+      duration: Math.random() * 20 + 10,
+      delay: Math.random() * 5,
+    }));
+  }, []); // Boş dependency array - sadece bir kez oluştur
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">

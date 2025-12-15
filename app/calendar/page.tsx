@@ -127,8 +127,8 @@ export default function CalendarPage() {
   const [draggedTask, setDraggedTask] = React.useState<Task | null>(null);
   const mainRef = React.useRef<HTMLElement>(null);
 
-  // Session'dan workspace ID al veya store'dan
-  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+  // Store'dan workspace ID al, yoksa session'dan
+  const workspaceId = currentWorkspaceId || session?.user?.workspaceId;
 
   // Workspace yoksa workspace seçim sayfasına yönlendir
   React.useEffect(() => {

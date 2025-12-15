@@ -5,6 +5,7 @@ export const authConfig = {
     signIn: "/signin",
   },
   secret: process.env.AUTH_SECRET,
+  trustHost: true, // VDS için gerekli
   callbacks: {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;

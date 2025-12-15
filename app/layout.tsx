@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen`}>
+      <body className={`${inter.className} min-h-screen`} suppressHydrationWarning>
         <GlobalButtonStyles />
         <Providers>
           <SidebarProvider>

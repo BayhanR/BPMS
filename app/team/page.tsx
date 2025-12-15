@@ -53,8 +53,8 @@ export default function TeamPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [filter, setFilter] = React.useState<"all" | "admin" | "editor" | "viewer" | "online">("all");
 
-  // Session'dan workspace ID al veya store'dan
-  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+  // Store'dan workspace ID al, yoksa session'dan
+  const workspaceId = currentWorkspaceId || session?.user?.workspaceId;
 
   // Users API çağrısı
   const { data: users, error, isLoading, mutate } = useSWR<TeamMember[]>(
@@ -566,40 +566,78 @@ function InviteModal({
   onSuccess: () => void;
 }) {
   const [email, setEmail] = React.useState("");
-  const [role, setRole] = React.useState<"editor" | "viewer">("editor");
+  const [role, setRole] = React.useState<"admin" | "editor" | "viewer">("editor");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [inviteUrl, setInviteUrl] = React.useState<string | null>(null);
+  const [copied, setCopied] = React.useState(false);
 
-  const handleInvite = async () => {
-    if (!email) {
-      setError("E-posta adresi gerekli");
-      return;
-    }
-
+  const handleCreateInvite = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`/api/workspaces/${workspaceId}/invite`, {
+      const res = await fetch("/api/invites", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, role }),
+        body: JSON.stringify({ 
+          workspaceId, 
+          email: email || null, 
+          role 
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Davet gönderilemedi");
+        setError(data.error || "Davet oluşturulamadı");
         return;
       }
 
-      onSuccess();
-      onClose();
+      // Client-side'da URL oluştur (window.location.origin kullan)
+      const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+      const fullUrl = `${baseUrl}/invite/${data.token}`;
+      setInviteUrl(fullUrl);
     } catch (err) {
       setError("Bir hata oluştu");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCopyLink = async () => {
+    if (!inviteUrl) return;
+
+    try {
+      // Modern clipboard API
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(inviteUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback: Eski tarayıcılar için
+        const textArea = document.createElement("textarea");
+        textArea.value = inviteUrl;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error("Kopyalama hatası:", err);
+      setError("Link kopyalanamadı. Lütfen manuel olarak kopyalayın.");
+    }
+  };
+
+  const handleClose = () => {
+    if (inviteUrl) {
+      onSuccess();
+    }
+    onClose();
   };
 
   return (
@@ -608,7 +646,7 @@ function InviteModal({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      onClick={onClose}
+      onClick={handleClose}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <motion.div
@@ -620,7 +658,9 @@ function InviteModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-2xl font-bold text-white mb-2">Üye Davet Et</h3>
-        <p className="text-sm text-white/60 mb-6">E-posta adresi ile yeni üye davet edin</p>
+        <p className="text-sm text-white/60 mb-6">
+          Davet linki oluşturun ve paylaşın
+        </p>
 
         {error && (
           <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -628,63 +668,113 @@ function InviteModal({
           </div>
         )}
 
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">E-posta Adresi</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ornek@email.com"
-              className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-white/40 focus:outline-none focus:border-[#ff1e56]/50 focus:ring-2 focus:ring-[#ff1e56]/20 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white/80 mb-2">Rol</label>
-            <div className="flex gap-2">
-              {[
-                { value: "editor", label: "Editor", icon: Edit3 },
-                { value: "viewer", label: "Viewer", icon: Eye },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => setRole(option.value as typeof role)}
+        {/* Link oluşturulmuşsa */}
+        {inviteUrl ? (
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
+              <p className="text-green-400 text-sm font-medium mb-2">✓ Davet linki oluşturuldu!</p>
+              <p className="text-white/60 text-xs mb-3">Bu linki paylaşarak üye davet edebilirsin (7 gün geçerli)</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={inviteUrl}
+                  readOnly
+                  onClick={(e) => {
+                    e.currentTarget.select();
+                    e.currentTarget.setSelectionRange(0, 99999); // Mobil için
+                  }}
+                  className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-text"
+                />
+                <motion.button
+                  onClick={handleCopyLink}
                   className={cn(
-                    "flex-1 px-4 py-3 rounded-xl border flex items-center justify-center gap-2 transition-all",
-                    role === option.value
-                      ? "border-[#ff1e56]/50 bg-[#ff1e56]/10 text-white"
-                      : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                    "px-4 py-2 rounded-lg font-medium text-sm transition-colors whitespace-nowrap",
+                    copied 
+                      ? "bg-green-500/20 text-green-400 border border-green-500/30" 
+                      : "bg-[#ff1e56] text-white hover:bg-[#ff1e56]/80"
                   )}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <option.icon className="w-4 h-4" />
-                  {option.label}
-                </button>
-              ))}
+                  {copied ? "✓ Kopyalandı" : "Kopyala"}
+                </motion.button>
+              </div>
+            </div>
+
+            <motion.button
+              className="w-full px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleClose}
+            >
+              Tamam
+            </motion.button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">
+                E-posta Adresi (Opsiyonel)
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ornek@email.com"
+                className="w-full px-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder:text-white/40 focus:outline-none focus:border-[#ff1e56]/50 focus:ring-2 focus:ring-[#ff1e56]/20 transition-all"
+              />
+              <p className="text-xs text-white/40 mt-1">
+                Belirli bir kişiye özel link için e-posta girin, yoksa genel link oluşturulur
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-white/80 mb-2">Rol</label>
+              <div className="flex gap-2">
+                {[
+                  { value: "admin", label: "Admin", icon: Shield },
+                  { value: "editor", label: "Editor", icon: Edit3 },
+                  { value: "viewer", label: "Viewer", icon: Eye },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setRole(option.value as typeof role)}
+                    className={cn(
+                      "flex-1 px-3 py-3 rounded-xl border flex items-center justify-center gap-2 transition-all text-sm",
+                      role === option.value
+                        ? "border-[#ff1e56]/50 bg-[#ff1e56]/10 text-white"
+                        : "border-white/10 bg-white/5 text-white/60 hover:bg-white/10"
+                    )}
+                  >
+                    <option.icon className="w-4 h-4" />
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <motion.button
+                className="flex-1 px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                İptal
+              </motion.button>
+              <motion.button
+                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-semibold shadow-lg shadow-[#ff1e56]/30 disabled:opacity-50"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCreateInvite}
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Link Oluştur"}
+              </motion.button>
             </div>
           </div>
-
-          <div className="flex gap-3 pt-2">
-            <motion.button
-              className="flex-1 px-6 py-3 rounded-xl border border-white/10 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              İptal
-            </motion.button>
-            <motion.button
-              className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-[#ff1e56] to-[#ff006e] text-white font-semibold shadow-lg shadow-[#ff1e56]/30 disabled:opacity-50"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleInvite}
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Davet Gönder"}
-            </motion.button>
-          </div>
-        </div>
+        )}
       </motion.div>
     </motion.div>
   );

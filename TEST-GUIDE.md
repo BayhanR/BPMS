@@ -132,6 +132,16 @@ Sunucu `http://localhost:3004` adresinde çalışacak.
 3. **Infinite scroll** tetiklenir
 4. Yeni activity'ler yüklenir
 
+### 9. Workspace Silme
+1. `/workspaces` sayfasına git
+2. Admin rolüne sahip olduğun bir workspace kartını bul
+3. Kartın sağ üstündeki **Sil** butonuna tıkla (workspace'e girmeden)
+4. Açılan modalde uyarı metnini ve geri alınamaz olduğunu kontrol et
+5. Input alanına büyük harflerle **"SİL"** yaz
+6. **Workspace'i Sil** butonunun sadece doğru metin yazıldığında aktif olduğunu doğrula
+7. Silme butonuna bas
+8. Workspace'in listeden kaldırıldığını ve sayfanın reload olmadan SWR ile güncellendiğini kontrol et
+
 ## 🎨 Animasyon Testleri
 
 ### Spring Physics

@@ -2,124 +2,85 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Sidebar } from "@/components/sidebar";
-import { Topbar } from "@/components/topbar";
-import { useSidebarContext } from "@/components/sidebar-context";
+import { useParams } from "next/navigation";
+import useSWR from "swr";
 import { ActivityFeed } from "@/components/activity-feed";
+import { Loader2, AlertCircle, Activity } from "lucide-react";
 
-const mockActivities = [
-  {
-    id: "1",
-    type: "task_created" as const,
-    user: "John Doe",
-    action: "oluşturdu",
-    target: "Design new dashboard",
-    timestamp: new Date(),
-  },
-  {
-    id: "2",
-    type: "task_completed" as const,
-    user: "Jane Smith",
-    action: "tamamladı",
-    target: "API Integration",
-    timestamp: new Date(Date.now() - 3600000),
-  },
-  {
-    id: "3",
-    type: "comment" as const,
-    user: "Mike Johnson",
-    action: "yorum ekledi",
-    target: "Web Portal Redesign",
-    timestamp: new Date(Date.now() - 7200000),
-  },
-  {
-    id: "4",
-    type: "file_uploaded" as const,
-    user: "Sarah Wilson",
-    action: "dosya yükledi",
-    target: "design-mockup.png",
-    timestamp: new Date(Date.now() - 10800000),
-  },
-  {
-    id: "5",
-    type: "branch_created" as const,
-    user: "Tom Brown",
-    action: "branch oluşturdu",
-    target: "feature/auth-system",
-    timestamp: new Date(Date.now() - 14400000),
-  },
-  ...Array.from({ length: 50 }).map((_, i) => {
-    const types = ["task_created", "task_completed", "comment", "file_uploaded"] as const;
-    const users = ["John Doe", "Jane Smith", "Mike Johnson", "Sarah Wilson"];
-    const actions = ["oluşturdu", "tamamladı", "yorum ekledi", "dosya yükledi"];
-    
-    return {
-      id: `activity-${i + 6}`,
-      type: types[i % 4],
-      user: users[i % 4],
-      action: actions[i % 4],
-      target: `Task ${i + 6}`,
-      timestamp: new Date(Date.now() - (i + 6) * 3600000),
-    };
-  }),
-];
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 export default function ActivityPage() {
-  const [activities, setActivities] = React.useState(mockActivities);
-  const [hasMore, setHasMore] = React.useState(true);
-  const { sidebarWidth } = useSidebarContext();
-  const contentStyle = React.useMemo(
-    () => ({
-      paddingLeft: sidebarWidth,
-      transition: "padding 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-    }),
-    [sidebarWidth]
+  const params = useParams();
+  const projectId = params.id as string;
+
+  // Proje aktivitelerini çek
+  const { data: activities, error, isLoading } = useSWR(
+    projectId ? `/api/projects/${projectId}/activity` : null,
+    fetcher,
+    {
+      // Hata durumunda boş array döndür
+      onError: () => {},
+    }
   );
 
-  const handleLoadMore = () => {
-    // Infinite scroll logic
-    // In production, fetch more from API
-    setTimeout(() => {
-      if (activities.length < mockActivities.length) {
-        setHasMore(true);
-      } else {
-        setHasMore(false);
-      }
-    }, 500);
-  };
+  // API henüz yoksa veya hata varsa boş göster
+  const activityList = Array.isArray(activities) ? activities : [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col" style={contentStyle}>
-        <Topbar />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">
-          <motion.div
-            className="max-w-4xl mx-auto space-y-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              type: "spring",
-              stiffness: 150,
-              damping: 20,
-            }}
-          >
-            {/* Header */}
-            <div>
-              <h1 className="text-4xl font-bold text-white mb-2">Activity Feed</h1>
-              <p className="text-white/60">Tüm proje aktivitelerini takip edin</p>
-            </div>
+    <div className="p-6 md:p-8">
+      <motion.div
+        className="max-w-4xl mx-auto space-y-6"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          type: "spring",
+          stiffness: 150,
+          damping: 20,
+        }}
+      >
+        {/* Header */}
+        <div>
+          <h1 className="text-4xl font-bold text-white mb-2">Aktivite</h1>
+          <p className="text-white/60">Proje aktivitelerini takip edin</p>
+        </div>
 
-            {/* Activity Feed */}
-            <ActivityFeed
-              activities={activities}
-              onLoadMore={handleLoadMore}
-              hasMore={hasMore}
-            />
-          </motion.div>
-        </main>
-      </div>
+        {/* Empty State */}
+        {activityList.length === 0 && (
+          <div className="text-center py-16">
+            <Activity className="w-16 h-16 text-white/20 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-white mb-2">Henüz aktivite yok</h3>
+            <p className="text-white/60">
+              Görev oluşturduğunuzda, düzenlediğinizde veya tamamladığınızda aktiviteler burada görünecek.
+            </p>
+          </div>
+        )}
+
+        {/* Activity Feed */}
+        {activityList.length > 0 && (
+          <ActivityFeed
+            activities={activityList.map((a: any) => ({
+              id: a.id,
+              type: a.action.includes("created") ? "task_created" :
+                    a.action.includes("completed") ? "task_completed" :
+                    a.action.includes("comment") ? "comment" : "task_created",
+              user: a.user?.name || "Kullanıcı",
+              action: a.action,
+              target: a.metadata?.title || a.metadata?.name || "",
+              timestamp: new Date(a.createdAt),
+            }))}
+            onLoadMore={() => {}}
+            hasMore={false}
+          />
+        )}
+      </motion.div>
     </div>
   );
 }
-

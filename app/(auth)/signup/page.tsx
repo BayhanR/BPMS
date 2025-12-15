@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import Tilt from "react-parallax-tilt";
 import { Mail, Lock, User, ArrowRight, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { PremiumBackground } from "@/components/auth/premium-background";
 import { PremiumInput } from "@/components/auth/premium-input";
 import { useRouter } from "next/navigation";
@@ -237,30 +236,36 @@ export default function SignUpPage() {
                       )}
 
                       {/* Submit Button */}
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="pt-2"
+                      <motion.button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-medium hover:brightness-110 transition-all shadow-lg shadow-primary/30 disabled:opacity-50 relative overflow-hidden"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        onClick={(e) => {
+                          if (isLoading) return;
+                          // Flash efekti
+                          const button = e.currentTarget;
+                          const flash = document.createElement("div");
+                          flash.className = "absolute inset-0 bg-white/30 rounded-xl";
+                          flash.style.animation = "flash 0.3s ease-out";
+                          button.appendChild(flash);
+                          setTimeout(() => flash.remove(), 300);
+                        }}
                       >
-                        <Button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-accent text-white font-medium hover:brightness-110 transition-all shadow-lg shadow-primary/30 disabled:opacity-50"
-                        >
-                          {isLoading ? (
-                            <motion.div
-                              className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            />
-                          ) : (
-                            <>
-                              Hesap Oluştur
-                              <ArrowRight className="ml-2 w-5 h-5" />
-                            </>
-                          )}
-                        </Button>
-                      </motion.div>
+                        {isLoading ? (
+                          <motion.div
+                            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mx-auto"
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          />
+                        ) : (
+                          <>
+                            Hesap Oluştur
+                            <ArrowRight className="ml-2 w-5 h-5 inline" />
+                          </>
+                        )}
+                      </motion.button>
 
                       {/* Divider */}
                       <div className="relative flex items-center justify-center my-6">
@@ -273,19 +278,25 @@ export default function SignUpPage() {
                       </div>
 
                       {/* Google Button */}
-                      <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                      <motion.button
+                        type="button"
+                        onClick={(e) => {
+                          // Flash efekti
+                          const button = e.currentTarget;
+                          const flash = document.createElement("div");
+                          flash.className = "absolute inset-0 bg-white/20 rounded-xl";
+                          flash.style.animation = "flash 0.3s ease-out";
+                          button.appendChild(flash);
+                          setTimeout(() => flash.remove(), 300);
+                          handleGoogleSignIn();
+                        }}
+                        className="w-full h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 transition-all relative overflow-hidden group flex items-center justify-center gap-2"
+                        style={{
+                          boxShadow: "0 4px 16px rgba(255, 255, 255, 0.1)",
+                        }}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
                       >
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleGoogleSignIn}
-                          className="w-full h-12 rounded-xl bg-white/5 border-white/10 text-white hover:bg-white/10 transition-all relative overflow-hidden group"
-                          style={{
-                            boxShadow: "0 4px 16px rgba(255, 255, 255, 0.1)",
-                          }}
-                        >
                           <motion.div
                             className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0"
                             animate={{
@@ -297,7 +308,7 @@ export default function SignUpPage() {
                               ease: "linear",
                             }}
                           />
-                          <svg className="w-5 h-5 mr-2 relative z-10" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 relative z-10 flex-shrink-0" viewBox="0 0 24 24">
                             <path
                               fill="currentColor"
                               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -323,8 +334,7 @@ export default function SignUpPage() {
                               boxShadow: "0 0 30px rgba(255, 255, 255, 0.3)",
                             }}
                           />
-                        </Button>
-                      </motion.div>
+                      </motion.button>
                     </motion.form>
 
                     {/* Footer */}

@@ -290,7 +290,7 @@ export function TaskModal({
                           </Button>
                           <Button
                             type="submit"
-                            disabled={isLoading || !title.trim()}
+                            disabled={isLoading || !title.trim() || !projectId}
                             className="flex-1 bg-gradient-to-r from-primary to-accent text-white hover:brightness-110 disabled:opacity-50"
                           >
                             {isLoading ? "Kaydediliyor..." : task ? "Güncelle" : "Oluştur"}

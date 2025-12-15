@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import Tilt from "react-parallax-tilt";
@@ -26,11 +27,14 @@ import {
   Zap,
   Rocket,
   Sparkles,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSidebarContext } from "@/components/sidebar-context";
+import { useAppStore } from "@/lib/store";
 
 const templates = [
   {
@@ -179,8 +183,15 @@ type TemplateData = (typeof templates)[number];
 
 export default function NewProjectPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const { currentWorkspaceId } = useAppStore();
   const [selectedTemplate, setSelectedTemplate] = React.useState<string | null>(null);
+  const [isCreating, setIsCreating] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const { sidebarWidth } = useSidebarContext();
+  
+  const workspaceId = currentWorkspaceId || session?.user?.workspaceId;
+
   const contentStyle = React.useMemo(
     () => ({
       paddingLeft: sidebarWidth,
@@ -189,15 +200,55 @@ export default function NewProjectPage() {
     [sidebarWidth]
   );
 
-  const handleTemplateSelect = (templateId: string) => {
+  // Workspace yoksa yönlendir
+  React.useEffect(() => {
+    if (!workspaceId && session) {
+      router.push("/workspaces");
+    }
+  }, [workspaceId, session, router]);
+
+  const handleTemplateSelect = async (templateId: string) => {
+    if (!workspaceId) {
+      setError("Workspace seçilmedi");
+      return;
+    }
+
     setSelectedTemplate(templateId);
-    
-    // Mock: Yeni proje oluştur
-    // Gerçek uygulamada burada API call yapılacak
-    setTimeout(() => {
-      const newProjectId = `project-${Date.now()}`;
-      router.push(`/projects/${newProjectId}`);
-    }, 300);
+    setIsCreating(true);
+    setError(null);
+
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) return;
+
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: template.name,
+          description: template.description,
+          color: template.color,
+          icon: template.id.replace(/-/g, ""),
+          workspaceId,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Proje oluşturulamadı");
+        setIsCreating(false);
+        setSelectedTemplate(null);
+        return;
+      }
+
+      // Başarılı - proje sayfasına yönlendir
+      router.push(`/projects/${data.id}/board`);
+    } catch (err) {
+      setError("Bir hata oluştu");
+      setIsCreating(false);
+      setSelectedTemplate(null);
+    }
   };
 
   return (
@@ -261,8 +312,23 @@ export default function NewProjectPage() {
               </div>
             </div>
 
-            {/* Loading State (Mock) */}
-            {selectedTemplate && (
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                className="fixed top-20 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <AlertCircle className="w-5 h-5" />
+                <span>{error}</span>
+                <button onClick={() => setError(null)} className="ml-4 text-white/60 hover:text-white">
+                  ✕
+                </button>
+              </motion.div>
+            )}
+
+            {/* Loading State */}
+            {isCreating && (
               <motion.div
                 className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
                 initial={{ opacity: 0 }}
@@ -270,20 +336,14 @@ export default function NewProjectPage() {
                 exit={{ opacity: 0 }}
               >
                 <motion.div
-                  className="bg-white/10 backdrop-blur-2xl rounded-2xl border border-white/20 p-8 text-center"
+                  className="bg-[#0a0a0a]/95 backdrop-blur-2xl rounded-2xl border border-white/20 p-8 text-center"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
                 >
-                  <motion.div
-                    className="w-16 h-16 rounded-full bg-gradient-to-r from-primary to-accent mx-auto mb-4 flex items-center justify-center"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sparkles className="w-8 h-8 text-white" />
-                  </motion.div>
+                  <Loader2 className="w-16 h-16 text-primary mx-auto mb-4 animate-spin" />
                   <h3 className="text-xl font-bold text-white mb-2">Proje Oluşturuluyor...</h3>
-                  <p className="text-white/60">Template uygulanıyor, lütfen bekleyin.</p>
+                  <p className="text-white/60">Lütfen bekleyin.</p>
                 </motion.div>
               </motion.div>
             )}

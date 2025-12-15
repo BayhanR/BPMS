@@ -76,7 +76,7 @@ export default function KanbanBoardPage() {
   const router = useRouter();
   const projectId = params.id as string;
   const { data: session, status: sessionStatus } = useSession();
-  const { currentWorkspaceId, setProject } = useAppStore();
+  const { currentWorkspaceId, setProject, setWorkspace } = useAppStore();
   const { canCreateTask, canEditTask } = usePermissions();
 
   const [activeId, setActiveId] = React.useState<string | null>(null);
@@ -91,9 +91,22 @@ export default function KanbanBoardPage() {
     fetcher
   );
 
+  // Proje bilgisini çek (workspace ID için)
+  const { data: projectInfo } = useSWR(
+    projectId ? `/api/projects?id=${projectId}` : null,
+    fetcher
+  );
+
+  // Workspace ID'yi projeden al veya store'dan
+  const workspaceId = React.useMemo(() => {
+    if (currentWorkspaceId) return currentWorkspaceId;
+    if (projectInfo?.workspaceId) return projectInfo.workspaceId;
+    return session?.user?.workspaceId;
+  }, [currentWorkspaceId, projectInfo?.workspaceId, session?.user?.workspaceId]);
+
   // Workspace members (assignee dropdown için)
   const { data: members } = useSWR(
-    currentWorkspaceId ? `/api/users?workspaceId=${currentWorkspaceId}` : null,
+    workspaceId ? `/api/users?workspaceId=${workspaceId}` : null,
     fetcher
   );
 
@@ -103,6 +116,13 @@ export default function KanbanBoardPage() {
       setProject(projectId);
     }
   }, [projectId, setProject]);
+
+  // Workspace ID'yi store'a kaydet (projeden alındıysa)
+  React.useEffect(() => {
+    if (projectInfo?.workspaceId && !currentWorkspaceId) {
+      setWorkspace(projectInfo.workspaceId, session?.user?.role || null);
+    }
+  }, [projectInfo?.workspaceId, currentWorkspaceId, session?.user?.role, setWorkspace]);
 
   // Task'ları column'lara göre grupla
   const columns = React.useMemo<Column[]>(() => {

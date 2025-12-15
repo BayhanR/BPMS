@@ -6,24 +6,45 @@ export default auth((req: NextRequest & { auth?: any }) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
 
-  // Public routes
+  // Public routes (giriş yapmadan erişilebilir)
   const publicRoutes = ["/", "/signin", "/signup"];
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
 
-  // Protected routes
-  const protectedRoutes = ["/dashboard", "/projects", "/calendar", "/team"];
+  // Semi-public routes (görüntülenebilir ama işlem için giriş gerekli)
+  const semiPublicRoutes = ["/invite"];
+  const isSemiPublicRoute = semiPublicRoutes.some((route) =>
+    nextUrl.pathname.startsWith(route)
+  );
+
+  // Protected routes (giriş gerekli)
+  const protectedRoutes = [
+    "/dashboard",
+    "/projects", 
+    "/calendar", 
+    "/team",
+    "/admin",
+    "/settings",
+    "/workspaces",
+  ];
   const isProtectedRoute = protectedRoutes.some((route) =>
     nextUrl.pathname.startsWith(route)
   );
 
-  // If on public route and logged in, redirect to dashboard
-  if (isPublicRoute && isLoggedIn) {
+  // Auth sayfaları (signin/signup) - giriş yapmışsa dashboard'a yönlendir
+  const isAuthRoute = ["/signin", "/signup"].includes(nextUrl.pathname);
+  if (isAuthRoute && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
-  // If on protected route and not logged in, redirect to signin
+  // Ana sayfa - giriş yapmışsa dashboard'a yönlendir
+  if (nextUrl.pathname === "/" && isLoggedIn) {
+    return NextResponse.redirect(new URL("/dashboard", nextUrl));
+  }
+
+  // Protected route - giriş yapmamışsa signin'e yönlendir
   if (isProtectedRoute && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/signin", nextUrl));
+    const callbackUrl = encodeURIComponent(nextUrl.pathname);
+    return NextResponse.redirect(new URL(`/signin?callbackUrl=${callbackUrl}`, nextUrl));
   }
 
   return NextResponse.next();

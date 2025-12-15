@@ -35,8 +35,8 @@ export default function DashboardPage() {
   const { sidebarWidth } = useSidebarContext();
   const { currentWorkspaceId, setWorkspace } = useAppStore();
 
-  // Session'dan workspace ID al veya store'dan
-  const workspaceId = session?.user?.workspaceId || currentWorkspaceId;
+  // Store'dan workspace ID al, yoksa session'dan
+  const workspaceId = currentWorkspaceId || session?.user?.workspaceId;
 
   // Dashboard stats API çağrısı
   const { data, error, isLoading } = useSWR(
@@ -52,12 +52,12 @@ export default function DashboardPage() {
     }
   }, [status, workspaceId, router]);
 
-  // Workspace ID'yi store'a kaydet
+  // İlk yüklemede session'dan workspace ID'yi store'a kaydet (sadece store boşsa)
   React.useEffect(() => {
-    if (session?.user?.workspaceId && session?.user?.role) {
+    if (session?.user?.workspaceId && session?.user?.role && !currentWorkspaceId) {
       setWorkspace(session.user.workspaceId, session.user.role);
     }
-  }, [session?.user?.workspaceId, session?.user?.role, setWorkspace]);
+  }, [session?.user?.workspaceId, session?.user?.role, currentWorkspaceId, setWorkspace]);
 
   const contentStyle = React.useMemo(
     () => ({

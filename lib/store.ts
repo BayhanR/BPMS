@@ -49,6 +49,7 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         currentWorkspaceId: state.currentWorkspaceId,
         currentProjectId: state.currentProjectId,
+        userRole: state.userRole,
       }),
     }
   )

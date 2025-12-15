@@ -2,38 +2,16 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Search, Sun, Moon, User, LogOut } from "lucide-react";
+import { Search, Sun, Moon, User, LogOut, Building2, Settings } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 import { NotificationsDropdown } from "./notifications-dropdown";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import { useAppStore } from "@/lib/store";
+import useSWR from "swr";
+import Link from "next/link";
 
-const mockNotifications = [
-  {
-    id: "1",
-    title: "Yeni görev atandı",
-    message: "Web Portal Redesign projesine atandınız",
-    timestamp: new Date(),
-    read: false,
-    type: "info" as const,
-  },
-  {
-    id: "2",
-    title: "Görev tamamlandı",
-    message: "API Integration görevi tamamlandı",
-    timestamp: new Date(Date.now() - 3600000),
-    read: false,
-    type: "success" as const,
-  },
-  {
-    id: "3",
-    title: "Yorum eklendi",
-    message: "John Doe bir yorum ekledi",
-    timestamp: new Date(Date.now() - 7200000),
-    read: true,
-    type: "info" as const,
-  },
-];
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface TopbarProps {
   className?: string;
@@ -41,12 +19,28 @@ interface TopbarProps {
 
 export function Topbar({ className }: TopbarProps) {
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
+  const { currentWorkspaceId, reset } = useAppStore();
   const [mounted, setMounted] = React.useState(false);
   const [profileOpen, setProfileOpen] = React.useState(false);
+
+  // Workspace bilgisini çek
+  const { data: workspace } = useSWR(
+    currentWorkspaceId ? `/api/workspaces/${currentWorkspaceId}` : null,
+    fetcher
+  );
+
+  // Gerçek bildirimleri çek (şimdilik boş array)
+  const notifications: any[] = [];
 
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleSignOut = async () => {
+    reset(); // Store'u temizle
+    await signOut({ callbackUrl: "/" }); // Landing page'e yönlendir
+  };
 
   return (
     <motion.header
@@ -118,9 +112,24 @@ export function Topbar({ className }: TopbarProps) {
           )}
         </motion.button>
 
+        {/* Workspace Badge */}
+        {workspace && (
+          <Link href="/workspaces">
+            <motion.div
+              className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+              whileHover={{ scale: 1.02 }}
+            >
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-sm text-white/80 font-medium max-w-[120px] truncate">
+                {workspace.name}
+              </span>
+            </motion.div>
+          </Link>
+        )}
+
         {/* Notifications */}
         <NotificationsDropdown
-          notifications={mockNotifications}
+          notifications={notifications}
           onMarkAsRead={(id) => console.log("Mark as read:", id)}
           onMarkAllAsRead={() => console.log("Mark all as read")}
         />
@@ -139,27 +148,55 @@ export function Topbar({ className }: TopbarProps) {
             whileTap={{ scale: 0.95 }}
             onClick={() => setProfileOpen((p) => !p)}
           >
-            <User className="w-5 h-5 text-white" />
+            {session?.user?.name ? (
+              <span className="text-white font-bold text-sm">
+                {session.user.name.charAt(0).toUpperCase()}
+              </span>
+            ) : (
+              <User className="w-5 h-5 text-white" />
+            )}
           </motion.button>
 
           {profileOpen && (
             <motion.div
-              className="absolute right-0 mt-3 w-52 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.35)] p-2"
+              className="absolute right-0 mt-3 w-56 rounded-2xl border border-white/10 bg-[#0a0a0a]/95 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 8 }}
               transition={{ type: "spring", stiffness: 220, damping: 20 }}
             >
-              <div className="px-3 py-2 text-sm text-white/60 border-b border-white/5">
-                Hesap
+              {/* User Info */}
+              <div className="px-4 py-3 border-b border-white/10">
+                <p className="text-sm font-medium text-white truncate">
+                  {session?.user?.name || "Kullanıcı"}
+                </p>
+                <p className="text-xs text-white/50 truncate">
+                  {session?.user?.email}
+                </p>
               </div>
-              <button
-                onClick={() => signOut({ callbackUrl: "/signin" })}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white hover:bg-white/10 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-                Çıkış Yap
-              </button>
+
+              {/* Menu Items */}
+              <div className="p-2">
+                <Link href="/settings" onClick={() => setProfileOpen(false)}>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white/80 hover:bg-white/10 transition-colors cursor-pointer">
+                    <Settings className="w-4 h-4" />
+                    Ayarlar
+                  </div>
+                </Link>
+                <Link href="/workspaces" onClick={() => setProfileOpen(false)}>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-white/80 hover:bg-white/10 transition-colors cursor-pointer">
+                    <Building2 className="w-4 h-4" />
+                    Workspace Değiştir
+                  </div>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Çıkış Yap
+                </button>
+              </div>
             </motion.div>
           )}
         </div>

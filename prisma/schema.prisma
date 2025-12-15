@@ -53,6 +53,25 @@ model Workspace {
   updatedAt DateTime           @updatedAt
   projects  Project[]
   members   WorkspaceMember[]
+  invites   WorkspaceInvite[]
+}
+
+// Davet sistemi
+model WorkspaceInvite {
+  id          String         @id @default(cuid())
+  workspaceId String
+  email       String?
+  token       String         @unique
+  role        WorkspaceRole  @default(editor)
+  expiresAt   DateTime
+  usedAt      DateTime?
+  usedBy      String?
+  createdBy   String
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+
+  @@index([token])
+  @@index([workspaceId])
 }
 
 model WorkspaceMember {

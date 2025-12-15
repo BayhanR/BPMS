@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSession } from "next-auth/react";
 import {
   LayoutDashboard,
   FolderKanban,
@@ -33,6 +34,7 @@ const menuItems = [
 ];
 
 export function Sidebar({ collapsed: initialCollapsed = true, onToggle }: SidebarProps) {
+  const { data: session } = useSession();
   const [collapsed, setCollapsed] = React.useState(initialCollapsed);
   const [hovered, setHovered] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -170,124 +172,127 @@ function SidebarContent({
   onToggle?: () => void;
   isMobile: boolean;
 }) {
+  const { data: session } = useSession();
   return (
     <div className="flex flex-col h-full p-4">
-        <div
-          className={cn(
-            "flex items-center mb-8",
-            isExpanded ? ((isMobile && onToggle) ? "justify-between" : "justify-start") : "justify-center"
-          )}
-        >
-          <AnimatePresence mode="wait">
-            {isExpanded ? (
-              <motion.div
-                key="logo"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="flex items-center gap-2"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  BPMS
-                </span>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="icon"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto"
-              >
-                <Sparkles className="w-5 h-5 text-white" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {isMobile && onToggle && (
-            <motion.button
-              onClick={onToggle}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <X className="w-5 h-5 text-white/70" />
-            </motion.button>
-          )}
-        </div>
-
-        {/* Menu Items */}
-        <nav className="flex-1 space-y-2">
-          {menuItems.map((item, index) => (
-            <motion.a
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl",
-                "text-white/70 hover:text-white transition-colors",
-                "bg-white/0 hover:bg-white/10",
-                "relative group overflow-hidden"
-              )}
+      <div className="flex items-center mb-8 h-12 relative">
+        <AnimatePresence mode="wait">
+          {isExpanded ? (
+            <motion.div
+              key="logo"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ x: 4 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="flex items-center gap-2 absolute left-0"
             >
-              <item.icon className="w-5 h-5 flex-shrink-0" />
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="font-medium whitespace-nowrap"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-              </AnimatePresence>
-              
-              {/* Active Indicator */}
-              <motion.div
-                className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-r-full opacity-0 group-hover:opacity-100"
-                initial={false}
-              />
-            </motion.a>
-          ))}
-        </nav>
-
-        {/* User Profile */}
-        <motion.div
-          className={cn(
-            "mt-auto p-3 rounded-xl bg-white/5 border border-white/10",
-            "flex items-center gap-3"
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent whitespace-nowrap">
+                BPMS
+              </span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="icon"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto absolute left-0 right-0"
+            >
+              <Sparkles className="w-5 h-5 text-white" />
+            </motion.div>
           )}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0" />
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                className="flex-1 min-w-0"
-              >
-                <p className="text-sm font-medium text-white truncate">
-                  Bayhan
-                </p>
-                <p className="text-xs text-white/50 truncate">
-                  bayhan@example.com
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        </AnimatePresence>
+
+        {isMobile && onToggle && (
+          <motion.button
+            onClick={onToggle}
+            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors ml-auto z-10"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <X className="w-5 h-5 text-white/70" />
+          </motion.button>
+        )}
       </div>
+
+      {/* Menu Items */}
+      <nav className="flex-1 space-y-2">
+        {menuItems.map((item, index) => (
+          <motion.a
+            key={item.href}
+            href={item.href}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-xl",
+              "text-white/70 hover:text-white transition-colors",
+              "bg-white/0 hover:bg-white/10",
+              "relative group overflow-hidden"
+            )}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+            whileHover={{ x: 4 }}
+          >
+            <item.icon className="w-5 h-5 flex-shrink-0" />
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: "auto" }}
+                  exit={{ opacity: 0, width: 0 }}
+                  className="font-medium whitespace-nowrap"
+                >
+                  {item.label}
+                </motion.span>
+              )}
+            </AnimatePresence>
+
+            {/* Active Indicator */}
+            <motion.div
+              className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-accent rounded-r-full opacity-0 group-hover:opacity-100"
+              initial={false}
+            />
+          </motion.a>
+        ))}
+      </nav>
+
+      {/* User Profile */}
+      <motion.div
+        className={cn(
+          "mt-auto p-3 rounded-xl bg-white/5 border border-white/10",
+          "flex items-center gap-3"
+        )}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        {session?.user?.image ? (
+          <img src={session.user.image} alt={session.user.name || "User"} className="w-10 h-10 rounded-full border border-white/10" />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex-shrink-0 flex items-center justify-center text-white font-bold">
+            {session?.user?.name?.[0] || session?.user?.email?.[0] || "U"}
+          </div>
+        )}
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: "auto" }}
+              exit={{ opacity: 0, width: 0 }}
+              className="flex-1 min-w-0"
+            >
+              <p className="text-sm font-medium text-white truncate">
+                {session?.user?.name || "Kullanıcı"}
+              </p>
+              <p className="text-xs text-white/50 truncate">
+                {session?.user?.email}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
   );
 }
 

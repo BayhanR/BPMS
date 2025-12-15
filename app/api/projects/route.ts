@@ -11,8 +11,57 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const workspaceId = searchParams.get("workspaceId");
+    const projectId = searchParams.get("id");
 
-    // Workspace kontrolü
+    // Tek proje çekme (id parametresi ile)
+    if (projectId) {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        include: {
+          _count: {
+            select: { tasks: true },
+          },
+          tasks: {
+            select: { status: true },
+          },
+        },
+      });
+
+      if (!project) {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      }
+
+      // Kullanıcının workspace'e erişimi var mı
+      const membership = await prisma.workspaceMember.findUnique({
+        where: {
+          userId_workspaceId: {
+            userId: session.user.id,
+            workspaceId: project.workspaceId,
+          },
+        },
+      });
+
+      if (!membership) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      const totalTasks = project.tasks.length;
+      const doneTasks = project.tasks.filter((t) => t.status === "done").length;
+      const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+      return NextResponse.json({
+        id: project.id,
+        name: project.name,
+        description: project.description,
+        color: project.color,
+        icon: project.icon,
+        workspaceId: project.workspaceId,
+        taskCount: project._count.tasks,
+        progress,
+      });
+    }
+
+    // Workspace kontrolü (liste için)
     if (!workspaceId) {
       return NextResponse.json(
         { error: "workspaceId is required" },
